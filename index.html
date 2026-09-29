@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Planilha Diego - Gerador de Curva ABC & Dashboard</title>
+  <title>Planilha Diego - Gerador de Curva ABC & Dashboard com IA Groq</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -19,13 +19,13 @@
   <!-- Chart.js 4.4 CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   
-  <!-- SheetJS (Leitura rápida de Excel no navegador) -->
+  <!-- SheetJS (Leitura rápida de Excel) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   
-  <!-- ExcelJS (Geração completa de planilhas com estilos, fórmulas e cores) -->
+  <!-- ExcelJS (Geração completa de planilhas com estilos, fórmulas, freeze panes e autoFilter) -->
   <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
   
-  <!-- FileSaver.js (Salvar arquivo Blob no navegador) -->
+  <!-- FileSaver.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
   <style>
@@ -33,7 +33,7 @@
       font-family: 'Inter', sans-serif;
     }
     .gradient-header {
-      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #2563eb 100%);
     }
     .dropzone {
       transition: all 0.25s ease;
@@ -60,9 +60,9 @@
 <body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col">
 
   <!-- ========================================================== -->
-  <!-- BARRA SUPERIOR (HEADER) COM O NOME "Planilha Diego"       -->
+  <!-- BARRA SUPERIOR (HEADER)                                    -->
   <!-- ========================================================== -->
-  <header class="gradient-header text-white shadow-lg sticky top-0 z-50">
+  <header class="gradient-header text-white shadow-xl sticky top-0 z-50 border-b border-blue-900/40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <div class="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-inner">
@@ -72,17 +72,25 @@
           <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
             Planilha Diego
             <span class="text-xs font-semibold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-              Web App HTML
+              Web App Pro
             </span>
           </h1>
-          <p class="text-xs sm:text-sm text-blue-100 font-medium">
-            Gerador Automático de Curva ABC & Dashboard de Inventário
+          <p class="text-xs sm:text-sm text-blue-200 font-medium">
+            Gerador de Curva ABC, Dashboard Executivo & Inteligência Artificial Groq
           </p>
         </div>
       </div>
-      <div class="flex items-center gap-2 text-xs text-blue-100 bg-white/10 px-3.5 py-1.5 rounded-lg border border-white/10 shadow-sm">
-        <i data-lucide="sparkles" class="w-4 h-4 text-amber-300"></i>
-        <span>100% no Navegador • Pronto para o Git</span>
+
+      <!-- BOTÃO CONFIGURAR GROQ API -->
+      <div class="flex items-center gap-2">
+        <button 
+          onclick="openGroqModal()" 
+          id="btnGroqStatus"
+          class="flex items-center gap-2 text-xs text-white bg-white/10 hover:bg-white/20 px-3.5 py-2 rounded-xl border border-white/20 shadow-sm transition-all"
+        >
+          <i data-lucide="cpu" class="w-4 h-4 text-amber-400"></i>
+          <span id="groqStatusText">Configurar IA Groq</span>
+        </button>
       </div>
     </div>
   </header>
@@ -97,21 +105,21 @@
       <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div class="max-w-3xl">
           <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
-            Anexe a planilha simples e gere a planilha completa na hora
+            Automatização Completa do Inventário com Curva ABC e IA
           </h2>
           <p class="text-slate-600 text-sm sm:text-base leading-relaxed">
-            Basta anexar o relatório bruto do inventário que você baixa do sistema. O aplicativo processa tudo automaticamente: consolida a <strong class="text-slate-800">Base</strong> de todos os almoxarifados, calcula a <strong class="text-slate-800">Curva ABC</strong> com corte 80/15/5, monta as tabelas analíticas e desenha o <strong class="text-slate-800">Dashboard Executivo</strong> do mesmo jeitinho.
+            Anexe a planilha simples do sistema. O aplicativo monta as fórmulas vivas do Excel (<code class="text-blue-700 font-mono text-xs bg-blue-50 px-1 py-0.5 rounded">INDEX/MATCH</code>, <code class="text-blue-700 font-mono text-xs bg-blue-50 px-1 py-0.5 rounded">SUMIF</code>, <code class="text-blue-700 font-mono text-xs bg-blue-50 px-1 py-0.5 rounded">COUNTIF</code>), congela cabeçalhos, ativa filtros automáticos e gera o <strong class="text-slate-800">Dashboard Executivo</strong> com diagnóstico por IA.
           </p>
         </div>
         <div class="flex flex-wrap gap-2 text-xs font-semibold text-slate-600">
           <span class="inline-flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
-            <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i> Curva ABC (80/15/5)
+            <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i> Fórmulas Nativas Vivas
           </span>
           <span class="inline-flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
-            <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i> 7 Gráficos Interativos
+            <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i> Cabeçalhos Congelados & Filtros
           </span>
           <span class="inline-flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
-            <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i> Base Dinâmica com Fórmulas
+            <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i> Parecer com IA Groq
           </span>
         </div>
       </div>
@@ -173,8 +181,8 @@
       <div id="loadingBar" class="hidden mt-8 text-center space-y-4">
         <div class="w-12 h-12 mx-auto rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"></div>
         <div class="space-y-1">
-          <p class="text-base font-bold text-slate-800">Processando planilha no navegador...</p>
-          <p class="text-xs text-slate-500">Unificando abas, calculando a Curva ABC e desenhando os 7 gráficos...</p>
+          <p class="text-base font-bold text-slate-800">Processando inventário no navegador...</p>
+          <p class="text-xs text-slate-500">Unificando abas, calculando a Curva ABC e formatando as tabelas...</p>
         </div>
         <div class="w-full bg-slate-100 rounded-full h-2 max-w-md mx-auto overflow-hidden">
           <div class="bg-blue-600 h-2 rounded-full w-2/3 animate-pulse-slow"></div>
@@ -201,7 +209,7 @@
         <div class="space-y-2 text-center md:text-left">
           <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-white backdrop-blur-sm border border-white/20">
             <i data-lucide="check-circle" class="w-4 h-4 text-emerald-200"></i>
-            Sucesso! Planilha gerada do mesmo jeitinho
+            Sucesso! Planilha formatada com fórmulas dinâmicas
           </span>
           <h3 id="resProjectName" class="text-2xl sm:text-3xl font-extrabold tracking-tight">
             Planilha Diego Pronta
@@ -227,6 +235,68 @@
             <i data-lucide="refresh-cw" class="w-4 h-4"></i>
             Processar Outra
           </button>
+        </div>
+      </div>
+
+      <!-- ========================================================== -->
+      <!-- PAINEL DE INTELIGÊNCIA ARTIFICIAL (GROQ API)              -->
+      <!-- ========================================================== -->
+      <div class="bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-2xl p-6 sm:p-8 shadow-xl border border-indigo-900/60">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-indigo-800/40">
+          <div class="flex items-center gap-3">
+            <div class="p-3 bg-indigo-600/30 rounded-xl border border-indigo-500/30 text-indigo-400">
+              <i data-lucide="bot" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h4 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                Diagnóstico Executivo por IA (Groq)
+                <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                  Llama 3.3 70B
+                </span>
+              </h4>
+              <p class="text-xs text-indigo-200">
+                Análise executiva instantânea de riscos, concentração de capital e planos de ação
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button 
+              id="btnRunGroq" 
+              onclick="generateGroqInsight()" 
+              class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-md transition-all"
+            >
+              <i data-lucide="sparkles" class="w-4 h-4 text-amber-300"></i>
+              <span>Gerar Parecer com IA</span>
+            </button>
+            <button 
+              id="btnCopyZap" 
+              onclick="copyToWhatsApp()" 
+              class="hidden inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs sm:text-sm px-3.5 py-2.5 rounded-xl shadow-md transition-all"
+              title="Copiar texto formatado para colar no WhatsApp da diretoria"
+            >
+              <i data-lucide="copy" class="w-4 h-4"></i>
+              <span>Copiar p/ WhatsApp</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ÁREA DE RESPOSTA DA IA -->
+        <div id="groqResponseArea" class="mt-6 space-y-4">
+          <div id="groqInitialNotice" class="text-sm text-indigo-200/80 bg-indigo-950/40 p-4 rounded-xl border border-indigo-800/30 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <i data-lucide="lightbulb" class="w-5 h-5 text-amber-400 shrink-0"></i>
+              <span>Clique em <strong>"Gerar Parecer com IA"</strong> para receber uma auditoria instantânea dos pontos críticos do inventário gerado.</span>
+            </div>
+          </div>
+
+          <div id="groqLoading" class="hidden py-8 text-center space-y-3">
+            <div class="w-8 h-8 mx-auto rounded-full border-3 border-indigo-400 border-t-white animate-spin"></div>
+            <p class="text-xs text-indigo-300 font-medium animate-pulse">Consultando o modelo Llama 3.3 via Groq (300 tokens/s)...</p>
+          </div>
+
+          <div id="groqResultCard" class="hidden bg-slate-900/60 p-5 sm:p-6 rounded-xl border border-indigo-500/20 space-y-4 text-slate-100 text-sm leading-relaxed whitespace-pre-line">
+            <div id="groqResultContent"></div>
+          </div>
         </div>
       </div>
 
@@ -291,20 +361,18 @@
           Gráficos Interativos do Dashboard
         </h4>
 
-        <!-- LINHA 1 DE GRÁFICOS: Curva ABC Acumulada & Pareto -->
+        <!-- LINHA 1 DE GRÁFICOS -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Gráfico 0: Curva ABC Linha -->
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
             <h5 class="text-sm font-bold text-slate-800 mb-3 flex items-center justify-between">
               <span>Curva ABC – % acumulado do valor</span>
-              <span class="text-xs font-normal text-slate-400">Linhas de corte 80% e 95%</span>
+              <span class="text-xs font-normal text-slate-400">Cortes em 80% e 95%</span>
             </h5>
             <div class="chart-container">
               <canvas id="chartCurvaAbc"></canvas>
             </div>
           </div>
 
-          <!-- Gráfico 1: Pareto 20 maiores itens -->
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
             <h5 class="text-sm font-bold text-slate-800 mb-3 flex items-center justify-between">
               <span>Pareto – 20 maiores itens por valor</span>
@@ -316,9 +384,8 @@
           </div>
         </div>
 
-        <!-- LINHA 2 DE GRÁFICOS: Rosca Classes, Colunas Itens Classe & Barras Locais -->
+        <!-- LINHA 2 DE GRÁFICOS -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <!-- Gráfico 2: Rosca Classes -->
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
             <h5 class="text-sm font-bold text-slate-800 mb-3">Valor por classe ABC</h5>
             <div class="chart-container">
@@ -326,7 +393,6 @@
             </div>
           </div>
 
-          <!-- Gráfico 3: Colunas Itens por Classe -->
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
             <h5 class="text-sm font-bold text-slate-800 mb-3">Nº de itens por classe</h5>
             <div class="chart-container">
@@ -334,7 +400,6 @@
             </div>
           </div>
 
-          <!-- Gráfico 4: Barras por Local -->
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
             <h5 class="text-sm font-bold text-slate-800 mb-3">Valor por local de estoque</h5>
             <div class="chart-container">
@@ -343,9 +408,8 @@
           </div>
         </div>
 
-        <!-- LINHA 3 DE GRÁFICOS: Top 10 Naturezas & Top 10 Itens -->
+        <!-- LINHA 3 DE GRÁFICOS -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Gráfico 5: Top 10 Naturezas -->
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
             <h5 class="text-sm font-bold text-slate-800 mb-3">Top 10 naturezas por valor</h5>
             <div class="chart-container">
@@ -353,7 +417,6 @@
             </div>
           </div>
 
-          <!-- Gráfico 6: Top 10 Itens -->
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
             <h5 class="text-sm font-bold text-slate-800 mb-3">Top 10 itens por valor</h5>
             <div class="chart-container">
@@ -426,26 +489,87 @@
 
   </main>
 
+  <!-- ========================================================== -->
+  <!-- MODAL DE CONFIGURAÇÃO DA GROQ API                          -->
+  <!-- ========================================================== -->
+  <div id="groqModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-2xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-slate-200 space-y-5">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2.5">
+          <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+            <i data-lucide="cpu" class="w-5 h-5"></i>
+          </div>
+          <h3 class="font-bold text-slate-900 text-lg">Chave de API do Groq</h3>
+        </div>
+        <button onclick="closeGroqModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <p class="text-sm text-slate-600 leading-relaxed">
+        O <strong>Groq</strong> processa inteligência artificial ultra-rápida (Llama 3.3 70B) para auditar os estoques e sugerir melhorias. Você pode obter uma chave gratuita em menos de 1 minuto.
+      </p>
+
+      <div class="space-y-2">
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Sua API Key do Groq (gsk_...)</label>
+        <input 
+          type="password" 
+          id="groqApiKeyInput" 
+          placeholder="gsk_..." 
+          class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
+        >
+        <p class="text-[11px] text-slate-500 flex items-center gap-1">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i>
+          Sua chave fica salva apenas no seu próprio navegador (<code class="bg-slate-100 px-1 py-0.5 rounded">localStorage</code>).
+        </p>
+      </div>
+
+      <div class="p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-xl text-xs text-indigo-900 flex items-start gap-2.5">
+        <i data-lucide="external-link" class="w-4 h-4 text-indigo-600 shrink-0 mt-0.5"></i>
+        <div>
+          <span>Ainda não tem chave? Gere a sua grátis no painel oficial do Groq:</span>
+          <a href="https://console.groq.com/keys" target="_blank" class="block font-bold text-indigo-700 hover:underline mt-0.5">
+            console.groq.com/keys &rarr;
+          </a>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button 
+          onclick="closeGroqModal()" 
+          class="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+        >
+          Cancelar
+        </button>
+        <button 
+          onclick="saveGroqApiKey()" 
+          class="px-6 py-2.5 text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-md transition-all"
+        >
+          Salvar Chave
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- RODAPÉ -->
   <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
     <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
       <p class="font-medium text-slate-600">
-        <strong>Planilha Diego</strong> • Aplicativo 100% em HTML e JavaScript para automação de inventário.
+        <strong>Planilha Diego</strong> • Aplicativo em HTML5 e JavaScript com Inteligência Artificial Groq.
       </p>
       <p class="text-slate-400">
-        Compatível com Microsoft Excel, LibreOffice e Google Planilhas.
+        Fórmulas dinâmicas nativas (INDEX/MATCH, SUMIF, COUNTIF) • Compatível com Excel e Google Sheets.
       </p>
     </div>
   </footer>
 
   <!-- ========================================================== -->
-  <!-- JAVASCRIPT DO MOTOR DA PLANILHA DIEGO                      -->
+  <!-- JAVASCRIPT DO MOTOR DA PLANILHA DIEGO & IA GROQ            -->
   <!-- ========================================================== -->
   <script>
-    // Inicializar ícones
     lucide.createIcons();
 
-    // Elementos DOM
+    // DOM Elements
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
     const fileSelectedBar = document.getElementById('fileSelectedBar');
@@ -459,6 +583,46 @@
     let currentFile = null;
     let processedResult = null;
     let chartInstances = {};
+    let lastAiResponseText = "";
+
+    // Gerenciamento da API Key do Groq
+    function getStoredGroqKey() {
+      return localStorage.getItem('groq_api_key') || '';
+    }
+
+    function updateGroqStatusBadge() {
+      const key = getStoredGroqKey();
+      const statusText = document.getElementById('groqStatusText');
+      if (key && key.startsWith('gsk_')) {
+        statusText.textContent = "IA Groq Conectada";
+        statusText.classList.add('text-emerald-300');
+      } else {
+        statusText.textContent = "Configurar IA Groq";
+        statusText.classList.remove('text-emerald-300');
+      }
+    }
+    updateGroqStatusBadge();
+
+    function openGroqModal() {
+      document.getElementById('groqApiKeyInput').value = getStoredGroqKey();
+      document.getElementById('groqModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeGroqModal() {
+      document.getElementById('groqModal').classList.add('hidden');
+    }
+
+    function saveGroqApiKey() {
+      const val = document.getElementById('groqApiKeyInput').value.trim();
+      if (val) {
+        localStorage.setItem('groq_api_key', val);
+      } else {
+        localStorage.removeItem('groq_api_key');
+      }
+      updateGroqStatusBadge();
+      closeGroqModal();
+    }
 
     // Drag and drop
     ['dragenter', 'dragover'].forEach(eventName => {
@@ -502,7 +666,9 @@
       return Number(val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    // Processamento do arquivo Excel no próprio navegador
+    // ==========================================================
+    // PROCESSAMENTO DO ARQUIVO EXCEL NO NAVEGADOR
+    // ==========================================================
     function processSpreadsheet() {
       if (!currentFile) return;
 
@@ -521,7 +687,7 @@
             throw new Error("O arquivo não possui abas válidas.");
           }
 
-          // 1. Mapear abas para nomes padronizados limpos
+          // 1. Mapeamento de abas
           const sheetMap = {};
           wbRaw.SheetNames.forEach((name, idx) => {
             const lower = name.toLowerCase();
@@ -536,7 +702,7 @@
             }
           });
 
-          // 2. Extrair data a partir do nome do arquivo
+          // 2. Data e Nome do Projeto
           let dateStr = "27/09/2026";
           const mDate = currentFile.name.match(/(\d{2})(\d{2})(\d{4})/);
           if (mDate) {
@@ -574,7 +740,6 @@
               const saldoFinanceiro = row[6];
               const natureza = row[12];
 
-              // Pular totalizador do sistema
               if (String(nomefantasia || '').toUpperCase() === 'TOTAL' || String(saldoFinanceiro || '').includes('SUM(') || String(codloc || '').toUpperCase() === 'TOTAL') {
                 continue;
               }
@@ -608,7 +773,7 @@
               totalBaseRows++;
               totalInventoryValue += valNum;
 
-              // Itens consolidados
+              // Itens
               if (!itemsMap.has(idprd)) {
                 itemsMap.set(idprd, {
                   idprd: idprd,
@@ -616,14 +781,16 @@
                   nome: String(nomefantasia || ''),
                   natureza: String(natureza || ''),
                   totalVal: 0,
+                  totalFis: 0,
                   locations: new Set()
                 });
               }
               const itm = itemsMap.get(idprd);
               itm.totalVal += valNum;
+              itm.totalFis += fisNum;
               itm.locations.add(String(codloc || ''));
 
-              // Locais consolidados
+              // Locais
               const locKey = String(codloc || '');
               if (!locMap.has(locKey)) {
                 let cleanLocName = String(nomeLoc || '');
@@ -641,7 +808,7 @@
               loc.totalVal += valNum;
               loc.count++;
 
-              // Naturezas consolidadas
+              // Naturezas
               const natKey = String(natureza || 'Outros').trim();
               if (natKey) {
                 if (!natMap.has(natKey)) {
@@ -784,7 +951,6 @@
         tbodyLocs.appendChild(tr);
       });
 
-      // Renderizar Gráficos Chart.js
       renderCharts(res);
 
       document.getElementById('uploadSection').classList.add('hidden');
@@ -793,11 +959,10 @@
     }
 
     function renderCharts(res) {
-      // Destruir gráficos anteriores se existirem
       Object.values(chartInstances).forEach(ch => ch.destroy());
       chartInstances = {};
 
-      // 1. Curva ABC Linha (Amostra de 100 pontos para leveza)
+      // 1. Curva ABC Linha
       const step = Math.max(1, Math.floor(res.sortedItems.length / 80));
       const samplePoints = res.sortedItems.filter((_, i) => i % step === 0 || i === res.sortedItems.length - 1);
 
@@ -994,7 +1159,127 @@
     }
 
     // ==========================================================
-    // GERAÇÃO DO ARQUIVO EXCEL COMPLETO NO NAVEGADOR (.XLSX)
+    // CHAMADA DA API DO GROQ (IA EXECUTIVE ADVISOR)
+    // ==========================================================
+    async function generateGroqInsight() {
+      if (!processedResult) return;
+
+      const apiKey = getStoredGroqKey();
+      if (!apiKey) {
+        openGroqModal();
+        return;
+      }
+
+      const res = processedResult;
+      const btn = document.getElementById('btnRunGroq');
+      const loading = document.getElementById('groqLoading');
+      const initialNotice = document.getElementById('groqInitialNotice');
+      const resultCard = document.getElementById('groqResultCard');
+      const resultContent = document.getElementById('groqResultContent');
+      const btnZap = document.getElementById('btnCopyZap');
+
+      initialNotice.classList.add('hidden');
+      resultCard.classList.add('hidden');
+      loading.classList.remove('hidden');
+      btn.disabled = true;
+
+      const top5Itens = res.sortedItems.slice(0, 5).map((it, idx) => 
+        `${idx + 1}. [${it.codigoprd}] ${it.nome} - Valor: ${formatBRL(it.totalVal)} (${(it.pctVal * 100).toFixed(2)}%)`
+      ).join('\n');
+
+      const locaisStr = res.sortedLocations.map(l => 
+        `- ${l.nome}: ${formatBRL(l.totalVal)} (${((l.totalVal / res.totalInventoryValue) * 100).toFixed(1)}%)`
+      ).join('\n');
+
+      const naturezasStr = res.sortedNaturezas.slice(0, 5).map(n => 
+        `- ${n[0]}: ${formatBRL(n[1].totalVal)} (${((n[1].totalVal / res.totalInventoryValue) * 100).toFixed(1)}%)`
+      ).join('\n');
+
+      const systemPrompt = `Você é o Consultor Executivo Especialista em Gestão de Estoques e Auditoria da 'Planilha Diego'.
+Sua função é analisar os números do inventário e redigir um parecer executivo de alto impacto para diretores e gerentes de suprimentos.
+Seja conciso, direto, profissional e focado em riscos financeiros, capital de giro e ações práticas.
+Use formatação elegante com tópicos claros, valores em R$ e emojis pontuais.`;
+
+      const userPrompt = `Analise o inventário da obra/empresa '${res.projectName}' referente à posição de ${res.dateStr}:
+
+DADOS GERAIS:
+- Valor Total em Estoque: ${formatBRL(res.totalInventoryValue)}
+- Itens Consolidados: ${res.numProducts.toLocaleString('pt-BR')} produtos distintos (${res.totalBaseRows.toLocaleString('pt-BR')} linhas)
+- Locais de Estoque: ${res.sortedLocations.length} locais
+
+CURVA ABC (PARETO):
+- Classe A: ${res.countA} itens (${((res.countA / res.numProducts) * 100).toFixed(1)}% dos itens) concentram ${formatBRL(res.valA)} (${((res.valA / res.totalInventoryValue) * 100).toFixed(1)}% do valor total).
+- Classe B: ${res.countB} itens concentram ${formatBRL(res.valB)} (${((res.valB / res.totalInventoryValue) * 100).toFixed(1)}%).
+- Classe C: ${res.countC} itens concentram ${formatBRL(res.valC)} (${((res.valC / res.totalInventoryValue) * 100).toFixed(1)}%).
+
+TOP 5 MATERIAIS DE MAIOR VALOR:
+${top5Itens}
+
+DISTRIBUIÇÃO POR LOCAL:
+${locaisStr}
+
+PRINCIPAIS NATUREZAS:
+${naturezasStr}
+
+Por favor, elabore um parecer executivo contendo:
+1. 🎯 RESUMO EXECUTIVO (visão geral do capital investido)
+2. ⚠️ ALERTAS DE CONCENTRAÇÃO & RISCO (quais itens e naturezas exigem blindagem, contagem e controle rigoroso)
+3. 📋 RECOMENDAÇÕES PRÁTICAS IMEDIATAS (ações recomendadas para o Diego e a equipe de almoxarifado)
+4. 📱 NOTA DE 3 LINHAS FORMATADA PARA WHATSAPP (resumo curto pronto para encaminhar à diretoria)`;
+
+      try {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.5,
+            max_tokens: 1500
+          })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error?.message || `Erro HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        const text = data.choices[0].message.content;
+        lastAiResponseText = text;
+
+        resultContent.textContent = text;
+        loading.classList.add('hidden');
+        resultCard.classList.remove('hidden');
+        btnZap.classList.remove('hidden');
+
+      } catch (err) {
+        loading.classList.add('hidden');
+        initialNotice.classList.remove('hidden');
+        alert("Erro na API do Groq: " + err.message + "\n\nVerifique se a sua chave API é válida em 'Configurar IA Groq'.");
+      } finally {
+        btn.disabled = false;
+        lucide.createIcons();
+      }
+    }
+
+    function copyToWhatsApp() {
+      if (!lastAiResponseText) return;
+      navigator.clipboard.writeText(lastAiResponseText).then(() => {
+        alert("Parecer executivo copiado para a área de transferência! Pronto para colar no WhatsApp.");
+      }).catch(() => {
+        alert("Não foi possível copiar automaticamente. Selecione o texto e use Ctrl+C.");
+      });
+    }
+
+    // ==========================================================
+    // GERAÇÃO DO ARQUIVO EXCEL COM FÓRMULAS VIVAS E FORMATAÇÃO PRO
     // ==========================================================
     async function downloadGeneratedExcel() {
       if (!processedResult) return;
@@ -1025,7 +1310,10 @@
         };
 
         // 1. ABA DASHBOARD
-        const wsDash = wb.addWorksheet('Dashboard', { properties: { tabColor: { argb: 'FF1F3864' } } });
+        const wsDash = wb.addWorksheet('Dashboard', { 
+          properties: { tabColor: { argb: 'FF1F3864' } },
+          views: [{ showGridLines: true }]
+        });
         wsDash.columns = Array.from({ length: 26 }, () => ({ width: 11 }));
 
         wsDash.mergeCells('A1:Z2');
@@ -1043,12 +1331,12 @@
 
         // 6 Cards de KPI
         const kpiDefs = [
-          { tRange: 'A5:D5', vRange: 'A6:D7', title: 'VALOR TOTAL EM ESTOQUE', formula: `='Curva ABC'!G${totalAbcRow}`, fmt: '"R$ "#,##0.00' },
-          { tRange: 'E5:H5', vRange: 'E6:H7', title: 'PRODUTOS DISTINTOS', formula: `=COUNT('Curva ABC'!$B$${firstAbcRow}:$B$${lastAbcRow})`, fmt: '#,##0' },
-          { tRange: 'I5:L5', vRange: 'I6:L7', title: 'LOCAIS DE ESTOQUE', formula: `=COUNTA(Análises!A11:A${10 + res.sortedLocations.length})`, fmt: '0' },
-          { tRange: 'M5:P5', vRange: 'M6:P7', title: 'ITENS CLASSE A', formula: `=Análises!B4`, fmt: '#,##0' },
-          { tRange: 'Q5:T5', vRange: 'Q6:T7', title: '% DO VALOR EM CLASSE A', formula: `=Análises!E4`, fmt: '0.0%' },
-          { tRange: 'U5:Z5', vRange: 'U6:Z7', title: 'MAIOR ITEM (% DO TOTAL)', formula: `='Curva ABC'!H${firstAbcRow}`, fmt: '0.0%' }
+          { tRange: 'A5:D5', vRange: 'A6:D7', title: 'VALOR TOTAL EM ESTOQUE', formula: `'Curva ABC'!G${totalAbcRow}`, res: res.totalInventoryValue, fmt: '"R$ "#,##0.00' },
+          { tRange: 'E5:H5', vRange: 'E6:H7', title: 'PRODUTOS DISTINTOS', formula: `COUNT('Curva ABC'!$B$${firstAbcRow}:$B$${lastAbcRow})`, res: numProducts, fmt: '#,##0' },
+          { tRange: 'I5:L5', vRange: 'I6:L7', title: 'LOCAIS DE ESTOQUE', formula: `COUNTA(Análises!A11:A${10 + res.sortedLocations.length})`, res: res.sortedLocations.length, fmt: '0' },
+          { tRange: 'M5:P5', vRange: 'M6:P7', title: 'ITENS CLASSE A', formula: `Análises!B4`, res: res.countA, fmt: '#,##0' },
+          { tRange: 'Q5:T5', vRange: 'Q6:T7', title: '% DO VALOR EM CLASSE A', formula: `Análises!E4`, res: res.valA / res.totalInventoryValue, fmt: '0.0%' },
+          { tRange: 'U5:Z5', vRange: 'U6:Z7', title: 'MAIOR ITEM (% DO TOTAL)', formula: `'Curva ABC'!H${firstAbcRow}`, res: res.sortedItems[0]?.pctVal || 0, fmt: '0.0%' }
         ];
 
         kpiDefs.forEach(k => {
@@ -1061,7 +1349,7 @@
 
           wsDash.mergeCells(k.vRange);
           const vCell = wsDash.getCell(k.vRange.split(':')[0]);
-          vCell.value = { formula: k.formula.substring(1) };
+          vCell.value = { formula: k.formula, result: k.res };
           vCell.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FF1F3864' } };
           vCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDDEBF7' } };
           vCell.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -1096,25 +1384,25 @@
         cM10.alignment = { horizontal: 'left', vertical: 'top', wrapText: true };
 
         const resumoRows = [
-          { r: 11, anR: 4, bg: 'FFC6EFCE', bold: false },
-          { r: 12, anR: 5, bg: 'FFFFEB9C', bold: false },
-          { r: 13, anR: 6, bg: 'FFF8CBAD', bold: false },
-          { r: 14, anR: 7, bg: 'FFDDEBF7', bold: true }
+          { r: 11, anR: 4, bg: 'FFC6EFCE', bold: false, resItens: res.countA, resPctIt: res.countA / numProducts, resVal: res.valA, resPctV: res.valA / res.totalInventoryValue },
+          { r: 12, anR: 5, bg: 'FFFFEB9C', bold: false, resItens: res.countB, resPctIt: res.countB / numProducts, resVal: res.valB, resPctV: res.valB / res.totalInventoryValue },
+          { r: 13, anR: 6, bg: 'FFF8CBAD', bold: false, resItens: res.countC, resPctIt: res.countC / numProducts, resVal: res.valC, resPctV: res.valC / res.totalInventoryValue },
+          { r: 14, anR: 7, bg: 'FFDDEBF7', bold: true, resItens: numProducts, resPctIt: 1, resVal: res.totalInventoryValue, resPctV: 1 }
         ];
         resumoRows.forEach(rowInfo => {
           const r = rowInfo.r;
           const anR = rowInfo.anR;
           const cells = [
-            { range: `A${r}:B${r}`, f: `Análises!A${anR}`, fmt: null, align: 'center' },
-            { range: `C${r}:D${r}`, f: `Análises!B${anR}`, fmt: '#,##0', align: 'center' },
-            { range: `E${r}:F${r}`, f: `Análises!C${anR}`, fmt: '0.0%', align: 'center' },
-            { range: `G${r}:I${r}`, f: `Análises!D${anR}`, fmt: '"R$ "#,##0.00', align: 'right' },
-            { range: `J${r}:K${r}`, f: `Análises!E${anR}`, fmt: '0.0%', align: 'center' }
+            { range: `A${r}:B${r}`, f: `Análises!A${anR}`, res: anR === 7 ? 'Total' : String.fromCharCode(61 + anR), fmt: null, align: 'center' },
+            { range: `C${r}:D${r}`, f: `Análises!B${anR}`, res: rowInfo.resItens, fmt: '#,##0', align: 'center' },
+            { range: `E${r}:F${r}`, f: `Análises!C${anR}`, res: rowInfo.resPctIt, fmt: '0.0%', align: 'center' },
+            { range: `G${r}:I${r}`, f: `Análises!D${anR}`, res: rowInfo.resVal, fmt: '"R$ "#,##0.00', align: 'right' },
+            { range: `J${r}:K${r}`, f: `Análises!E${anR}`, res: rowInfo.resPctV, fmt: '0.0%', align: 'center' }
           ];
           cells.forEach(cDef => {
             wsDash.mergeCells(cDef.range);
             const cell = wsDash.getCell(cDef.range.split(':')[0]);
-            cell.value = { formula: cDef.f };
+            cell.value = { formula: cDef.f, result: cDef.res };
             cell.font = { name: 'Arial', size: 10, bold: rowInfo.bold };
             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowInfo.bg } };
             cell.alignment = { horizontal: cDef.align, vertical: 'middle' };
@@ -1123,12 +1411,15 @@
           });
         });
 
-        // 2. ABA CURVA ABC
-        const wsAbc = wb.addWorksheet('Curva ABC', { properties: { tabColor: { argb: 'FFC00000' } } });
+        // 2. ABA CURVA ABC COM FREEZE PANES E AUTOFILTER
+        const wsAbc = wb.addWorksheet('Curva ABC', { 
+          properties: { tabColor: { argb: 'FFC00000' } },
+          views: [{ state: 'frozen', xSplit: 0, ySplit: 7, showGridLines: true }]
+        });
         wsAbc.columns = [
-          { width: 7 }, { width: 11 }, { width: 13 }, { width: 68 },
-          { width: 44 }, { width: 9 }, { width: 20 }, { width: 10 },
-          { width: 12 }, { width: 12 }, { width: 8 }
+          { width: 8 }, { width: 12 }, { width: 14 }, { width: 68 },
+          { width: 44 }, { width: 10 }, { width: 22 }, { width: 11 },
+          { width: 13 }, { width: 13 }, { width: 9 }
         ];
 
         wsAbc.getCell('A1').value = 'CURVA ABC DE ESTOQUE – CONSOLIDADA POR PRODUTO';
@@ -1158,6 +1449,7 @@
         cE5.alignment = { horizontal: 'center' };
         cE5.numFmt = '0%';
 
+        // Cabeçalhos Curva ABC
         const abcHeaders = ['Rank', 'IDPRD', 'Código', 'Descrição', 'Natureza', 'Nº locais', 'Valor em estoque (R$)', '% do valor', '% acumulado', '% acum. itens', 'Classe'];
         const hRow = wsAbc.getRow(7);
         abcHeaders.forEach((h, idx) => {
@@ -1169,9 +1461,14 @@
           c.border = thinBorder;
         });
 
+        // Ativar AutoFilter no Excel
+        wsAbc.autoFilter = `A7:K7`;
+
+        // Linhas de dados
         res.sortedItems.forEach((itm, idx) => {
           const r = firstAbcRow + idx;
           const row = wsAbc.getRow(r);
+          
           row.getCell(1).value = itm.rank;
           row.getCell(1).alignment = { horizontal: 'center' };
 
@@ -1182,29 +1479,30 @@
           row.getCell(4).value = itm.nome;
           row.getCell(5).value = itm.natureza;
 
-          row.getCell(6).value = { formula: `COUNTIF(Base!$D$2:$D$${lastBaseRow},B${r})` };
+          row.getCell(6).value = { formula: `COUNTIF(Base!$D$2:$D$${lastBaseRow},B${r})`, result: itm.locations.size };
           row.getCell(6).alignment = { horizontal: 'center' };
 
-          row.getCell(7).value = { formula: `SUMIF(Base!$D$2:$D$${lastBaseRow},B${r},Base!$I$2:$I$${lastBaseRow})` };
+          row.getCell(7).value = { formula: `SUMIF(Base!$D$2:$D$${lastBaseRow},B${r},Base!$I$2:$I$${lastBaseRow})`, result: itm.totalVal };
           row.getCell(7).numFmt = '"R$ "#,##0.00';
 
-          row.getCell(8).value = { formula: `IF($G$${totalAbcRow}=0,0,G${r}/$G$${totalAbcRow})` };
+          row.getCell(8).value = { formula: `IF($G$${totalAbcRow}=0,0,G${r}/$G$${totalAbcRow})`, result: itm.pctVal };
           row.getCell(8).numFmt = '0.00%';
 
           if (idx === 0) {
-            row.getCell(9).value = { formula: `H${r}` };
+            row.getCell(9).value = { formula: `H${r}`, result: itm.pctAccum };
           } else {
-            row.getCell(9).value = { formula: `I${r - 1}+H${r}` };
+            row.getCell(9).value = { formula: `I${r - 1}+H${r}`, result: itm.pctAccum };
           }
           row.getCell(9).numFmt = '0.0%';
 
-          row.getCell(10).value = { formula: `A${r}/${numProducts}` };
+          row.getCell(10).value = { formula: `A${r}/${numProducts}`, result: itm.pctItems };
           row.getCell(10).numFmt = '0.0%';
 
           const cK = row.getCell(11);
-          cK.value = { formula: `IF(I${r}<=$E$4,"A",IF(I${r}<=$E$5,"B","C"))` };
+          cK.value = { formula: `IF(I${r}<=$E$4,"A",IF(I${r}<=$E$5,"B","C"))`, result: itm.classe };
           cK.alignment = { horizontal: 'center' };
 
+          // Cores Executivas Suaves
           if (itm.classe === 'A') {
             cK.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC6EFCE' } };
             cK.font = { name: 'Arial', size: 9, bold: true, color: { argb: 'FF006100' } };
@@ -1221,12 +1519,12 @@
           }
         });
 
-        // Totais Curva ABC
+        // Totais
         const rTot = wsAbc.getRow(totalAbcRow);
         rTot.getCell(6).value = 'TOTAL';
         rTot.getCell(6).font = { name: 'Arial', size: 10, bold: true };
         rTot.getCell(6).alignment = { horizontal: 'right' };
-        rTot.getCell(7).value = { formula: `SUM(G${firstAbcRow}:G${lastAbcRow})` };
+        rTot.getCell(7).value = { formula: `SUM(G${firstAbcRow}:G${lastAbcRow})`, result: res.totalInventoryValue };
         rTot.getCell(7).font = { name: 'Arial', size: 10, bold: true };
         rTot.getCell(7).numFmt = '"R$ "#,##0.00';
 
@@ -1234,12 +1532,15 @@
         rConf.getCell(6).value = 'Conferência vs Base';
         rConf.getCell(6).font = { name: 'Arial', size: 9, color: { argb: 'FF595959' } };
         rConf.getCell(6).alignment = { horizontal: 'right' };
-        rConf.getCell(7).value = { formula: `G${totalAbcRow}-SUM(Base!$I$2:$I$${lastBaseRow})` };
+        rConf.getCell(7).value = { formula: `G${totalAbcRow}-SUM(Base!$I$2:$I$${lastBaseRow})`, result: 0 };
         rConf.getCell(7).font = { name: 'Arial', size: 9, color: { argb: 'FF595959' } };
         rConf.getCell(7).numFmt = '"R$ "#,##0.00';
 
         // 3. ABA ANÁLISES
-        const wsAn = wb.addWorksheet('Análises', { properties: { tabColor: { argb: 'FF808080' } } });
+        const wsAn = wb.addWorksheet('Análises', { 
+          properties: { tabColor: { argb: 'FF808080' } },
+          views: [{ showGridLines: true }]
+        });
         wsAn.columns = [{ width: 58 }, { width: 40 }, { width: 17 }, { width: 17 }, { width: 14 }, { width: 18 }];
 
         wsAn.getCell('A1').value = 'TABELAS DE APOIO DO DASHBOARD (fórmulas – não editar)';
@@ -1255,34 +1556,40 @@
           c.border = thinBorder;
         });
 
-        ['A', 'B', 'C'].forEach((cl, idx) => {
+        const anClassesData = [
+          { cl: 'A', it: res.countA, val: res.valA },
+          { cl: 'B', it: res.countB, val: res.valB },
+          { cl: 'C', it: res.countC, val: res.valC }
+        ];
+
+        anClassesData.forEach((cd, idx) => {
           const r = 4 + idx;
           const row = wsAn.getRow(r);
-          row.getCell(1).value = cl;
+          row.getCell(1).value = cd.cl;
           row.getCell(1).alignment = { horizontal: 'center' };
-          row.getCell(2).value = { formula: `COUNTIF('Curva ABC'!$K$${firstAbcRow}:$K$${lastAbcRow},A${r})` };
+          row.getCell(2).value = { formula: `COUNTIF('Curva ABC'!$K$${firstAbcRow}:$K$${lastAbcRow},A${r})`, result: cd.it };
           row.getCell(2).numFmt = '#,##0';
-          row.getCell(3).value = { formula: `B${r}/$B$7` };
+          row.getCell(3).value = { formula: `B${r}/$B$7`, result: cd.it / numProducts };
           row.getCell(3).numFmt = '0.0%';
-          row.getCell(4).value = { formula: `SUMIF('Curva ABC'!$K$${firstAbcRow}:$K$${lastAbcRow},A${r},'Curva ABC'!$G$${firstAbcRow}:$G$${lastAbcRow})` };
+          row.getCell(4).value = { formula: `SUMIF('Curva ABC'!$K$${firstAbcRow}:$K$${lastAbcRow},A${r},'Curva ABC'!$G$${firstAbcRow}:$G$${lastAbcRow})`, result: cd.val };
           row.getCell(4).numFmt = '"R$ "#,##0.00';
-          row.getCell(5).value = { formula: `D${r}/$D$7` };
+          row.getCell(5).value = { formula: `D${r}/$D$7`, result: cd.val / res.totalInventoryValue };
           row.getCell(5).numFmt = '0.0%';
         });
 
         const r7 = wsAn.getRow(7);
         r7.getCell(1).value = 'Total';
         r7.getCell(1).font = { name: 'Arial', size: 10, bold: true };
-        r7.getCell(2).value = { formula: 'SUM(B4:B6)' };
+        r7.getCell(2).value = { formula: 'SUM(B4:B6)', result: numProducts };
         r7.getCell(2).numFmt = '#,##0';
         r7.getCell(2).font = { name: 'Arial', size: 10, bold: true };
-        r7.getCell(3).value = { formula: 'SUM(C4:C6)' };
+        r7.getCell(3).value = { formula: 'SUM(C4:C6)', result: 1 };
         r7.getCell(3).numFmt = '0.0%';
         r7.getCell(3).font = { name: 'Arial', size: 10, bold: true };
-        r7.getCell(4).value = { formula: 'SUM(D4:D6)' };
+        r7.getCell(4).value = { formula: 'SUM(D4:D6)', result: res.totalInventoryValue };
         r7.getCell(4).numFmt = '"R$ "#,##0.00';
         r7.getCell(4).font = { name: 'Arial', size: 10, bold: true };
-        r7.getCell(5).value = { formula: 'SUM(E4:E6)' };
+        r7.getCell(5).value = { formula: 'SUM(E4:E6)', result: 1 };
         r7.getCell(5).numFmt = '0.0%';
         r7.getCell(5).font = { name: 'Arial', size: 10, bold: true };
 
@@ -1307,24 +1614,24 @@
           row.getCell(1).value = loc.codloc;
           row.getCell(1).alignment = { horizontal: 'center' };
           row.getCell(2).value = loc.nome;
-          row.getCell(3).value = { formula: `COUNTIF(Base!$B$2:$B$${lastBaseRow},A${r})` };
+          row.getCell(3).value = { formula: `COUNTIF(Base!$B$2:$B$${lastBaseRow},A${r})`, result: loc.count };
           row.getCell(3).numFmt = '#,##0';
-          row.getCell(4).value = { formula: `SUMIF(Base!$B$2:$B$${lastBaseRow},A${r},Base!$I$2:$I$${lastBaseRow})` };
+          row.getCell(4).value = { formula: `SUMIF(Base!$B$2:$B$${lastBaseRow},A${r},Base!$I$2:$I$${lastBaseRow})`, result: loc.totalVal };
           row.getCell(4).numFmt = '"R$ "#,##0.00';
-          row.getCell(5).value = { formula: `D${r}/$D$${totLocR}` };
+          row.getCell(5).value = { formula: `D${r}/$D$${totLocR}`, result: loc.totalVal / res.totalInventoryValue };
           row.getCell(5).numFmt = '0.0%';
         });
 
         const rTotLoc = wsAn.getRow(totLocR);
         rTotLoc.getCell(1).value = 'Total';
         rTotLoc.getCell(1).font = { name: 'Arial', size: 10, bold: true };
-        rTotLoc.getCell(3).value = { formula: `SUM(C${firstLocR}:C${lastLocR})` };
+        rTotLoc.getCell(3).value = { formula: `SUM(C${firstLocR}:C${lastLocR})`, result: res.totalBaseRows };
         rTotLoc.getCell(3).numFmt = '#,##0';
         rTotLoc.getCell(3).font = { name: 'Arial', size: 10, bold: true };
-        rTotLoc.getCell(4).value = { formula: `SUM(D${firstLocR}:D${lastLocR})` };
+        rTotLoc.getCell(4).value = { formula: `SUM(D${firstLocR}:D${lastLocR})`, result: res.totalInventoryValue };
         rTotLoc.getCell(4).numFmt = '"R$ "#,##0.00';
         rTotLoc.getCell(4).font = { name: 'Arial', size: 10, bold: true };
-        rTotLoc.getCell(5).value = { formula: `SUM(E${firstLocR}:E${lastLocR})` };
+        rTotLoc.getCell(5).value = { formula: `SUM(E${firstLocR}:E${lastLocR})`, result: 1 };
         rTotLoc.getCell(5).numFmt = '0.0%';
         rTotLoc.getCell(5).font = { name: 'Arial', size: 10, bold: true };
 
@@ -1346,14 +1653,14 @@
           const row = wsAn.getRow(r);
           row.getCell(1).value = loc.codloc;
           row.getCell(1).alignment = { horizontal: 'center' };
-          row.getCell(2).value = { formula: `B${locRefR}` };
+          row.getCell(2).value = { formula: `B${locRefR}`, result: loc.nome };
           row.getCell(3).value = { formula: `SUMIFS(Base!$I$2:$I$${lastBaseRow},Base!$B$2:$B$${lastBaseRow},$A${r},Base!$K$2:$K$${lastBaseRow},"A")` };
           row.getCell(3).numFmt = '"R$ "#,##0.00';
           row.getCell(4).value = { formula: `SUMIFS(Base!$I$2:$I$${lastBaseRow},Base!$B$2:$B$${lastBaseRow},$A${r},Base!$K$2:$K$${lastBaseRow},"B")` };
           row.getCell(4).numFmt = '"R$ "#,##0.00';
           row.getCell(5).value = { formula: `SUMIFS(Base!$I$2:$I$${lastBaseRow},Base!$B$2:$B$${lastBaseRow},$A${r},Base!$K$2:$K$${lastBaseRow},"C")` };
           row.getCell(5).numFmt = '"R$ "#,##0.00';
-          row.getCell(6).value = { formula: `SUM(C${r}:E${r})` };
+          row.getCell(6).value = { formula: `SUM(C${r}:E${r})`, result: loc.totalVal };
           row.getCell(6).numFmt = '"R$ "#,##0.00';
         });
 
@@ -1370,25 +1677,28 @@
         });
 
         const top10Nat = res.sortedNaturezas.slice(0, 10);
+        let somaTop10Nat = 0;
         top10Nat.forEach((item, idx) => {
           const r = natStartR + 1 + idx;
           const row = wsAn.getRow(r);
+          somaTop10Nat += item[1].totalVal;
           row.getCell(1).value = item[0];
-          row.getCell(2).value = { formula: `COUNTIF('Curva ABC'!$E$${firstAbcRow}:$E$${lastAbcRow},A${r})` };
+          row.getCell(2).value = { formula: `COUNTIF('Curva ABC'!$E$${firstAbcRow}:$E$${lastAbcRow},A${r})`, result: item[1].count };
           row.getCell(2).numFmt = '#,##0';
-          row.getCell(3).value = { formula: `SUMIF('Curva ABC'!$E$${firstAbcRow}:$E$${lastAbcRow},A${r},'Curva ABC'!$G$${firstAbcRow}:$G$${lastAbcRow})` };
+          row.getCell(3).value = { formula: `SUMIF('Curva ABC'!$E$${firstAbcRow}:$E$${lastAbcRow},A${r},'Curva ABC'!$G$${firstAbcRow}:$G$${lastAbcRow})`, result: item[1].totalVal };
           row.getCell(3).numFmt = '"R$ "#,##0.00';
-          row.getCell(4).value = { formula: `C${r}/'Curva ABC'!$G$${totalAbcRow}` };
+          row.getCell(4).value = { formula: `C${r}/'Curva ABC'!$G$${totalAbcRow}`, result: item[1].totalVal / res.totalInventoryValue };
           row.getCell(4).numFmt = '0.0%';
         });
 
         const demaisNatR = natStartR + 1 + top10Nat.length;
         const rDemais = wsAn.getRow(demaisNatR);
+        const valDemais = Math.max(0, res.totalInventoryValue - somaTop10Nat);
         rDemais.getCell(1).value = 'Demais naturezas';
         rDemais.getCell(1).font = { name: 'Arial', size: 10, italic: true };
-        rDemais.getCell(3).value = { formula: `'Curva ABC'!$G$${totalAbcRow}-SUM(C29:C${demaisNatR - 1})` };
+        rDemais.getCell(3).value = { formula: `'Curva ABC'!$G$${totalAbcRow}-SUM(C29:C${demaisNatR - 1})`, result: valDemais };
         rDemais.getCell(3).numFmt = '"R$ "#,##0.00';
-        rDemais.getCell(4).value = { formula: `C${demaisNatR}/'Curva ABC'!$G$${totalAbcRow}` };
+        rDemais.getCell(4).value = { formula: `C${demaisNatR}/'Curva ABC'!$G$${totalAbcRow}`, result: valDemais / res.totalInventoryValue };
         rDemais.getCell(4).numFmt = '0.0%';
 
         // Tabela 5: Top 10 Itens
@@ -1406,11 +1716,12 @@
         for (let idx = 0; idx < Math.min(10, numProducts); idx++) {
           const r = t5StartR + 1 + idx;
           const abcR = firstAbcRow + idx;
+          const itm = res.sortedItems[idx];
           const row = wsAn.getRow(r);
-          row.getCell(1).value = { formula: `'Curva ABC'!C${abcR}&" - "&LEFT('Curva ABC'!D${abcR},38)` };
-          row.getCell(2).value = { formula: `'Curva ABC'!G${abcR}` };
+          row.getCell(1).value = { formula: `'Curva ABC'!C${abcR}&" - "&LEFT('Curva ABC'!D${abcR},38)`, result: `${itm.codigoprd} - ${itm.nome.substring(0, 38)}` };
+          row.getCell(2).value = { formula: `'Curva ABC'!G${abcR}`, result: itm.totalVal };
           row.getCell(2).numFmt = '"R$ "#,##0.00';
-          row.getCell(3).value = { formula: `'Curva ABC'!H${abcR}` };
+          row.getCell(3).value = { formula: `'Curva ABC'!H${abcR}`, result: itm.pctVal };
           row.getCell(3).numFmt = '0.00%';
         }
 
@@ -1429,20 +1740,24 @@
         for (let idx = 0; idx < Math.min(20, numProducts); idx++) {
           const r = t6StartR + 1 + idx;
           const abcR = firstAbcRow + idx;
+          const itm = res.sortedItems[idx];
           const row = wsAn.getRow(r);
-          row.getCell(1).value = { formula: `'Curva ABC'!A${abcR}` };
+          row.getCell(1).value = { formula: `'Curva ABC'!A${abcR}`, result: itm.rank };
           row.getCell(1).alignment = { horizontal: 'center' };
-          row.getCell(2).value = { formula: `'Curva ABC'!G${abcR}` };
+          row.getCell(2).value = { formula: `'Curva ABC'!G${abcR}`, result: itm.totalVal };
           row.getCell(2).numFmt = '"R$ "#,##0.00';
-          row.getCell(3).value = { formula: `'Curva ABC'!I${abcR}` };
+          row.getCell(3).value = { formula: `'Curva ABC'!I${abcR}`, result: itm.pctAccum };
           row.getCell(3).numFmt = '0.0%';
         }
 
-        // 4. ABA BASE
-        const wsBase = wb.addWorksheet('Base', { properties: { tabColor: { argb: 'FF808080' } } });
+        // 4. ABA BASE COM FREEZE PANES E AUTOFILTER
+        const wsBase = wb.addWorksheet('Base', { 
+          properties: { tabColor: { argb: 'FF808080' } },
+          views: [{ state: 'frozen', xSplit: 0, ySplit: 1, showGridLines: true }]
+        });
         wsBase.columns = [
-          { width: 18 }, { width: 9 }, { width: 40 }, { width: 11 }, { width: 13 },
-          { width: 70 }, { width: 8 }, { width: 13 }, { width: 19 }, { width: 46 }, { width: 11 }
+          { width: 18 }, { width: 10 }, { width: 40 }, { width: 12 }, { width: 14 },
+          { width: 70 }, { width: 8 }, { width: 14 }, { width: 20 }, { width: 46 }, { width: 11 }
         ];
 
         const baseHeaders = ['Aba origem', 'CODLOC', 'Local', 'IDPRD', 'Código', 'Descrição', 'Unid.', 'Saldo físico', 'Saldo financeiro (R$)', 'Natureza', 'Classe ABC'];
@@ -1454,6 +1769,8 @@
           c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
         });
 
+        wsBase.autoFilter = `A1:K1`;
+
         let currBaseR = 2;
         res.rawSheetsData.forEach(sInfo => {
           const cleanName = sInfo.cleanName;
@@ -1462,23 +1779,26 @@
             const r = currBaseR++;
             const row = wsBase.getRow(r);
             row.getCell(1).value = cleanName;
-            row.getCell(2).value = { formula: `'${cleanName}'!A${rSrc}` };
-            row.getCell(3).value = { formula: `'${cleanName}'!B${rSrc}` };
-            row.getCell(4).value = { formula: `'${cleanName}'!C${rSrc}` };
-            row.getCell(5).value = { formula: `'${cleanName}'!D${rSrc}` };
-            row.getCell(6).value = { formula: `'${cleanName}'!E${rSrc}` };
-            row.getCell(7).value = { formula: `'${cleanName}'!J${rSrc}` };
+            row.getCell(2).value = { formula: `'${cleanName}'!A${rSrc}`, result: rowObj.codloc };
+            row.getCell(3).value = { formula: `'${cleanName}'!B${rSrc}`, result: rowObj.nomeLoc };
+            row.getCell(4).value = { formula: `'${cleanName}'!C${rSrc}`, result: rowObj.idprd };
+            row.getCell(5).value = { formula: `'${cleanName}'!D${rSrc}`, result: rowObj.codigoprd };
+            row.getCell(6).value = { formula: `'${cleanName}'!E${rSrc}`, result: rowObj.nomefantasia };
+            row.getCell(7).value = { formula: `'${cleanName}'!J${rSrc}`, result: rowObj.codundcontrole };
 
-            row.getCell(8).value = { formula: `'${cleanName}'!F${rSrc}` };
+            row.getCell(8).value = { formula: `'${cleanName}'!F${rSrc}`, result: rowObj.saldoFisico };
             row.getCell(8).numFmt = '#,##0.00';
 
-            row.getCell(9).value = { formula: `'${cleanName}'!G${rSrc}` };
+            row.getCell(9).value = { formula: `'${cleanName}'!G${rSrc}`, result: rowObj.saldoFinanceiro };
             row.getCell(9).numFmt = '"R$ "#,##0.00';
 
-            row.getCell(10).value = { formula: `'${cleanName}'!M${rSrc}` };
+            row.getCell(10).value = { formula: `'${cleanName}'!M${rSrc}`, result: rowObj.natureza };
 
+            // Classe ABC via formula INDEX/MATCH
+            const itmRef = res.sortedItems.find(x => x.idprd === rowObj.idprd);
+            const clRef = itmRef ? itmRef.classe : 'C';
             const cK = row.getCell(11);
-            cK.value = { formula: `INDEX('Curva ABC'!$K$${firstAbcRow}:$K$${lastAbcRow},MATCH(D${r},'Curva ABC'!$B$${firstAbcRow}:$B$${lastAbcRow},0))` };
+            cK.value = { formula: `INDEX('Curva ABC'!$K$${firstAbcRow}:$K$${lastAbcRow},MATCH(D${r},'Curva ABC'!$B$${firstAbcRow}:$B$${lastAbcRow},0))`, result: clRef };
             cK.alignment = { horizontal: 'center' };
 
             for (let c = 1; c <= 11; c++) {
@@ -1487,9 +1807,11 @@
           });
         });
 
-        // 5..N. ABAS DE DADOS ORIGINAIS
+        // 5..N. ABAS DE DADOS ORIGINAIS RENOMEADAS
         res.rawSheetsData.forEach(sInfo => {
-          const wsOrig = wb.addWorksheet(sInfo.cleanName);
+          const wsOrig = wb.addWorksheet(sInfo.cleanName, {
+            views: [{ state: 'frozen', xSplit: 0, ySplit: 1, showGridLines: true }]
+          });
           wsOrig.columns = Array.from({ length: 13 }, () => ({ width: 14 }));
           
           sInfo.headers.forEach((h, idx) => {
@@ -1497,9 +1819,13 @@
             wsOrig.getRow(1).getCell(idx + 1).font = { name: 'Arial', size: 10, bold: true };
           });
 
+          wsOrig.autoFilter = `A1:M1`;
+
+          let somaAba = 0;
           sInfo.rows.forEach((rObj, idx) => {
             const r = 2 + idx;
             const row = wsOrig.getRow(r);
+            somaAba += rObj.saldoFinanceiro;
             row.getCell(1).value = rObj.codloc;
             row.getCell(2).value = rObj.nomeLoc;
             row.getCell(3).value = rObj.idprd;
@@ -1520,7 +1846,7 @@
           const rTot = wsOrig.getRow(totR);
           rTot.getCell(6).value = 'TOTAL';
           rTot.getCell(6).font = { name: 'Arial', size: 10, bold: true };
-          rTot.getCell(7).value = { formula: `SUM(G2:G${totR - 1})` };
+          rTot.getCell(7).value = { formula: `SUM(G2:G${totR - 1})`, result: somaAba };
           rTot.getCell(7).font = { name: 'Arial', size: 10, bold: true };
           rTot.getCell(7).numFmt = '"R$ "#,##0.00';
         });
@@ -1542,6 +1868,7 @@
     function resetApp() {
       currentFile = null;
       processedResult = null;
+      lastAiResponseText = "";
       fileInput.value = '';
       hideError();
       document.getElementById('uploadSection').classList.remove('hidden');
