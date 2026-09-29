@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planilha Diego - Gerador de Curva ABC & Dashboard</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Chart.js 4.4 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  
+  <!-- SheetJS (Leitura rápida de Excel no navegador) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
+  <!-- ExcelJS (Geração completa de planilhas com estilos, fórmulas e cores) -->
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  
+  <!-- FileSaver.js (Salvar arquivo Blob no navegador) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .gradient-header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+    }
+    .dropzone {
+      transition: all 0.25s ease;
+    }
+    .dropzone.dragover {
+      border-color: #2563eb;
+      background-color: #eff6ff;
+      transform: scale(1.01);
+    }
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .animate-pulse-slow {
+      animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 280px;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col">
+
+  <!-- ========================================================== -->
+  <!-- BARRA SUPERIOR (HEADER) COM O NOME "Planilha Diego"       -->
+  <!-- ========================================================== -->
+  <header class="gradient-header text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-inner">
+          <i data-lucide="file-spreadsheet" class="w-7 h-7 text-emerald-300"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
+            Planilha Diego
+            <span class="text-xs font-semibold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+              Web App HTML
+            </span>
+          </h1>
+          <p class="text-xs sm:text-sm text-blue-100 font-medium">
+            Gerador Automático de Curva ABC & Dashboard de Inventário
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-xs text-blue-100 bg-white/10 px-3.5 py-1.5 rounded-lg border border-white/10 shadow-sm">
+        <i data-lucide="sparkles" class="w-4 h-4 text-amber-300"></i>
+        <span>100% no Navegador • Pronto para o Git</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================== -->
+  <!-- CONTEÚDO PRINCIPAL                                         -->
+  <!-- ========================================================== -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex-1 w-full space-y-8">
+
+    <!-- BANNER EXPLICATIVO -->
+    <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div class="max-w-3xl">
+          <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
+            Anexe a planilha simples e gere a planilha completa na hora
+          </h2>
+          <p class="text-slate-600 text-sm sm:text-base leading-relaxed">
+            Basta anexar o relatório bruto do inventário que você baixa do sistema. O aplicativo processa tudo automaticamente: consolida a <strong class="text-slate-800">Base</strong> de todos os almoxarifados, calcula a <strong class="text-slate-800">Curva ABC</strong> com corte 80/15/5, monta as tabelas analíticas e desenha o <strong class="text-slate-800">Dashboard Executivo</strong> do mesmo jeitinho.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2 text-xs font-semibold text-slate-600">
+          <span class="inline-flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
+            <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i> Curva ABC (80/15/5)
+          </span>
+          <span class="inline-flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
+            <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i> 7 Gráficos Interativos
+          </span>
+          <span class="inline-flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
+            <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i> Base Dinâmica com Fórmulas
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ZONA DE UPLOAD (DRAG & DROP) -->
+    <div id="uploadSection" class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+      <div 
+        id="dropzone" 
+        class="dropzone border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-2xl p-8 sm:p-12 text-center cursor-pointer bg-slate-50/50 hover:bg-blue-50/30 transition-all flex flex-col items-center justify-center gap-4"
+      >
+        <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls">
+        
+        <div class="w-20 h-20 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-inner">
+          <i data-lucide="upload-cloud" class="w-10 h-10"></i>
+        </div>
+
+        <div class="space-y-1">
+          <p class="text-lg font-bold text-slate-800">
+            Clique para selecionar ou arraste sua planilha aqui
+          </p>
+          <p class="text-sm text-slate-500">
+            Formatos suportados: <span class="font-mono font-semibold text-slate-700">.xlsx</span> ou <span class="font-mono font-semibold text-slate-700">.xls</span> (ex: INVENTARIO...XLSX)
+          </p>
+        </div>
+
+        <button 
+          type="button" 
+          onclick="document.getElementById('fileInput').click()" 
+          class="mt-2 inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-sm px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all"
+        >
+          <i data-lucide="file-up" class="w-4 h-4"></i>
+          Selecionar Planilha do Computador
+        </button>
+      </div>
+
+      <!-- BARRA DE ARQUIVO SELECIONADO -->
+      <div id="fileSelectedBar" class="hidden mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="p-2.5 bg-blue-600 text-white rounded-lg">
+            <i data-lucide="file-spreadsheet" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <p id="selectedFileName" class="text-sm font-bold text-slate-900"></p>
+            <p id="selectedFileSize" class="text-xs text-slate-500"></p>
+          </div>
+        </div>
+        <button 
+          id="btnProcess" 
+          onclick="processSpreadsheet()" 
+          class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-6 py-3 rounded-xl shadow hover:shadow-md transition-all"
+        >
+          <i data-lucide="play" class="w-4 h-4"></i>
+          Processar e Gerar Planilha Diego
+        </button>
+      </div>
+
+      <!-- CARREGAMENTO (LOADING) -->
+      <div id="loadingBar" class="hidden mt-8 text-center space-y-4">
+        <div class="w-12 h-12 mx-auto rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"></div>
+        <div class="space-y-1">
+          <p class="text-base font-bold text-slate-800">Processando planilha no navegador...</p>
+          <p class="text-xs text-slate-500">Unificando abas, calculando a Curva ABC e desenhando os 7 gráficos...</p>
+        </div>
+        <div class="w-full bg-slate-100 rounded-full h-2 max-w-md mx-auto overflow-hidden">
+          <div class="bg-blue-600 h-2 rounded-full w-2/3 animate-pulse-slow"></div>
+        </div>
+      </div>
+
+      <!-- ALERTA DE ERRO -->
+      <div id="errorAlert" class="hidden mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 flex items-start gap-3">
+        <i data-lucide="alert-circle" class="w-5 h-5 text-red-600 shrink-0 mt-0.5"></i>
+        <div class="text-sm">
+          <p class="font-bold text-red-900">Erro ao processar</p>
+          <p id="errorMessage" class="text-red-700"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- RESULTADO DO PROCESSAMENTO & DASHBOARD                    -->
+    <!-- ========================================================== -->
+    <div id="resultSection" class="hidden space-y-8">
+      
+      <!-- BANNER DE SUCESSO E DOWNLOAD -->
+      <div class="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="space-y-2 text-center md:text-left">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-white backdrop-blur-sm border border-white/20">
+            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-200"></i>
+            Sucesso! Planilha gerada do mesmo jeitinho
+          </span>
+          <h3 id="resProjectName" class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            Planilha Diego Pronta
+          </h3>
+          <p id="resSubDetails" class="text-emerald-100 text-sm">
+            Posição de estoque calculada com Curva ABC, Análises e Dashboard completo.
+          </p>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <button 
+            id="btnDownloadExcel" 
+            onclick="downloadGeneratedExcel()" 
+            class="inline-flex items-center justify-center gap-3 bg-white hover:bg-slate-100 text-emerald-800 font-extrabold text-base px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5"
+          >
+            <i data-lucide="download" class="w-6 h-6 text-emerald-600"></i>
+            Baixar Planilha Completa (.xlsx)
+          </button>
+          <button 
+            onclick="resetApp()" 
+            class="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold text-sm px-4 py-4 rounded-xl border border-white/20 transition-all"
+          >
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+            Processar Outra
+          </button>
+        </div>
+      </div>
+
+      <!-- 6 CARDS DE KPIS DO DASHBOARD -->
+      <div>
+        <h4 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <i data-lucide="layout-dashboard" class="w-5 h-5 text-blue-600"></i>
+          Indicadores Principais (KPIs do Dashboard)
+        </h4>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          <!-- Card 1: Valor Total -->
+          <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between">
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Valor Total Estoque</span>
+            <p id="kpiTotalVal" class="text-xl font-extrabold text-slate-900 mt-2">R$ 0,00</p>
+            <span class="text-[11px] text-emerald-600 font-medium flex items-center gap-1 mt-1">
+              <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> 100% inventariado
+            </span>
+          </div>
+
+          <!-- Card 2: Produtos Distintos -->
+          <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between">
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Produtos Distintos</span>
+            <p id="kpiProducts" class="text-xl font-extrabold text-slate-900 mt-2">0</p>
+            <span class="text-[11px] text-slate-500 font-medium mt-1">Itens consolidados</span>
+          </div>
+
+          <!-- Card 3: Locais de Estoque -->
+          <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between">
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Locais de Estoque</span>
+            <p id="kpiLocations" class="text-xl font-extrabold text-slate-900 mt-2">0</p>
+            <span class="text-[11px] text-slate-500 font-medium mt-1">Almoxarifados / Frentes</span>
+          </div>
+
+          <!-- Card 4: Itens Classe A -->
+          <div class="bg-white rounded-xl p-4 shadow-sm border border-emerald-200 bg-emerald-50/40 flex flex-col justify-between">
+            <span class="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Itens Classe A</span>
+            <p id="kpiClassAItems" class="text-xl font-extrabold text-emerald-900 mt-2">0</p>
+            <span id="kpiClassAPctItems" class="text-[11px] text-emerald-700 font-medium mt-1">0% dos itens</span>
+          </div>
+
+          <!-- Card 5: % Valor Classe A -->
+          <div class="bg-white rounded-xl p-4 shadow-sm border border-blue-200 bg-blue-50/40 flex flex-col justify-between">
+            <span class="text-xs font-semibold text-blue-800 uppercase tracking-wider">% Valor em Classe A</span>
+            <p id="kpiClassAPctVal" class="text-xl font-extrabold text-blue-900 mt-2">0%</p>
+            <span class="text-[11px] text-blue-700 font-medium mt-1">Alta criticidade</span>
+          </div>
+
+          <!-- Card 6: Maior Item -->
+          <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between">
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Maior Item (% Total)</span>
+            <p id="kpiTopItemPct" class="text-xl font-extrabold text-slate-900 mt-2">0%</p>
+            <span class="text-[11px] text-slate-500 font-medium mt-1">Concentração max.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEÇÃO DE GRÁFICOS INTERATIVOS CHART.JS -->
+      <div class="space-y-6">
+        <h4 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <i data-lucide="bar-chart-3" class="w-5 h-5 text-blue-600"></i>
+          Gráficos Interativos do Dashboard
+        </h4>
+
+        <!-- LINHA 1 DE GRÁFICOS: Curva ABC Acumulada & Pareto -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Gráfico 0: Curva ABC Linha -->
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h5 class="text-sm font-bold text-slate-800 mb-3 flex items-center justify-between">
+              <span>Curva ABC – % acumulado do valor</span>
+              <span class="text-xs font-normal text-slate-400">Linhas de corte 80% e 95%</span>
+            </h5>
+            <div class="chart-container">
+              <canvas id="chartCurvaAbc"></canvas>
+            </div>
+          </div>
+
+          <!-- Gráfico 1: Pareto 20 maiores itens -->
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h5 class="text-sm font-bold text-slate-800 mb-3 flex items-center justify-between">
+              <span>Pareto – 20 maiores itens por valor</span>
+              <span class="text-xs font-normal text-slate-400">Valores em R$</span>
+            </h5>
+            <div class="chart-container">
+              <canvas id="chartPareto"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- LINHA 2 DE GRÁFICOS: Rosca Classes, Colunas Itens Classe & Barras Locais -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Gráfico 2: Rosca Classes -->
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h5 class="text-sm font-bold text-slate-800 mb-3">Valor por classe ABC</h5>
+            <div class="chart-container">
+              <canvas id="chartRoscaAbc"></canvas>
+            </div>
+          </div>
+
+          <!-- Gráfico 3: Colunas Itens por Classe -->
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h5 class="text-sm font-bold text-slate-800 mb-3">Nº de itens por classe</h5>
+            <div class="chart-container">
+              <canvas id="chartItensClasse"></canvas>
+            </div>
+          </div>
+
+          <!-- Gráfico 4: Barras por Local -->
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h5 class="text-sm font-bold text-slate-800 mb-3">Valor por local de estoque</h5>
+            <div class="chart-container">
+              <canvas id="chartLocais"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- LINHA 3 DE GRÁFICOS: Top 10 Naturezas & Top 10 Itens -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Gráfico 5: Top 10 Naturezas -->
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h5 class="text-sm font-bold text-slate-800 mb-3">Top 10 naturezas por valor</h5>
+            <div class="chart-container">
+              <canvas id="chartNaturezas"></canvas>
+            </div>
+          </div>
+
+          <!-- Gráfico 6: Top 10 Itens -->
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h5 class="text-sm font-bold text-slate-800 mb-3">Top 10 itens por valor</h5>
+            <div class="chart-container">
+              <canvas id="chartTopItens"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEÇÃO DE TABELAS ANALÍTICAS -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- TABELA CLASSE ABC -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+          <div class="flex items-center justify-between mb-4">
+            <h5 class="font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="pie-chart" class="w-4 h-4 text-blue-600"></i>
+              Resumo por Classe ABC
+            </h5>
+            <span class="text-xs text-slate-400">Corte 80% / 95% / 100%</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 text-xs uppercase font-semibold border-b border-slate-200">
+                  <th class="py-2.5 px-3">Classe</th>
+                  <th class="py-2.5 px-3 text-center">Nº Itens</th>
+                  <th class="py-2.5 px-3 text-center">% Itens</th>
+                  <th class="py-2.5 px-3 text-right">Valor em Estoque</th>
+                  <th class="py-2.5 px-3 text-center">% Valor</th>
+                </tr>
+              </thead>
+              <tbody id="tblClassesBody" class="divide-y divide-slate-100">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- LOCAIS DE ESTOQUE -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+          <div class="flex items-center justify-between mb-4">
+            <h5 class="font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="map-pin" class="w-4 h-4 text-blue-600"></i>
+              Valores por Local de Estoque
+            </h5>
+            <span class="text-xs text-slate-400">Consolidado da Base</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 text-xs uppercase font-semibold border-b border-slate-200">
+                  <th class="py-2.5 px-3">Código</th>
+                  <th class="py-2.5 px-3">Local</th>
+                  <th class="py-2.5 px-3 text-center">Linhas</th>
+                  <th class="py-2.5 px-3 text-right">Valor (R$)</th>
+                  <th class="py-2.5 px-3 text-center">%</th>
+                </tr>
+              </thead>
+              <tbody id="tblLocationsBody" class="divide-y divide-slate-100">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- RODAPÉ -->
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <p class="font-medium text-slate-600">
+        <strong>Planilha Diego</strong> • Aplicativo 100% em HTML e JavaScript para automação de inventário.
+      </p>
+      <p class="text-slate-400">
+        Compatível com Microsoft Excel, LibreOffice e Google Planilhas.
+      </p>
+    </div>
+  </footer>
+
+  <!-- ========================================================== -->
+  <!-- JAVASCRIPT DO MOTOR DA PLANILHA DIEGO                      -->
+  <!-- ========================================================== -->
+  <script>
+    // Inicializar ícones
+    lucide.createIcons();
+
+    // Elementos DOM
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const fileSelectedBar = document.getElementById('fileSelectedBar');
+    const selectedFileName = document.getElementById('selectedFileName');
+    const selectedFileSize = document.getElementById('selectedFileSize');
+    const loadingBar = document.getElementById('loadingBar');
+    const errorAlert = document.getElementById('errorAlert');
+    const errorMessage = document.getElementById('errorMessage');
+    const resultSection = document.getElementById('resultSection');
+
+    let currentFile = null;
+    let processedResult = null;
+    let chartInstances = {};
+
+    // Drag and drop
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.add('dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('dragover');
+      });
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      const files = e.dataTransfer.files;
+      if (files.length > 0) handleFileSelect(files[0]);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (fileInput.files.length > 0) handleFileSelect(fileInput.files[0]);
+    });
+
+    function handleFileSelect(file) {
+      if (!file.name.match(/\.(xlsx|xls)$/i)) {
+        showError("Por favor, selecione um arquivo Excel (.xlsx ou .xls).");
+        return;
+      }
+      hideError();
+      currentFile = file;
+      selectedFileName.textContent = file.name;
+      selectedFileSize.textContent = (file.size / (1024 * 1024)).toFixed(2) + " MB";
+      fileSelectedBar.classList.remove('hidden');
+    }
+
+    function formatBRL(val) {
+      return Number(val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    // Processamento do arquivo Excel no próprio navegador
+    function processSpreadsheet() {
+      if (!currentFile) return;
+
+      hideError();
+      fileSelectedBar.classList.add('hidden');
+      dropzone.classList.add('hidden');
+      loadingBar.classList.remove('hidden');
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const wbRaw = XLSX.read(data, { type: 'array' });
+          
+          if (!wbRaw.SheetNames || wbRaw.SheetNames.length === 0) {
+            throw new Error("O arquivo não possui abas válidas.");
+          }
+
+          // 1. Mapear abas para nomes padronizados limpos
+          const sheetMap = {};
+          wbRaw.SheetNames.forEach((name, idx) => {
+            const lower = name.toLowerCase();
+            if (lower.includes('consumo') || name === 'Sheet' || (idx === 0 && wbRaw.SheetNames.length >= 3)) {
+              sheetMap[name] = 'Uso e Consumo';
+            } else if (lower.includes('fat') || lower.includes('terceiro') || (idx === 1 && wbRaw.SheetNames.length >= 3)) {
+              sheetMap[name] = 'Fat Dir Terceiro';
+            } else if (lower.includes('imobilizado') || (idx === 2 && wbRaw.SheetNames.length >= 3)) {
+              sheetMap[name] = 'Imobilizado';
+            } else {
+              sheetMap[name] = name.substring(0, 31);
+            }
+          });
+
+          // 2. Extrair data a partir do nome do arquivo
+          let dateStr = "27/09/2026";
+          const mDate = currentFile.name.match(/(\d{2})(\d{2})(\d{4})/);
+          if (mDate) {
+            dateStr = `${mDate[1]}/${mDate[2]}/${mDate[3]}`;
+          }
+
+          let projectName = "UFV NORONHA VERDE";
+
+          // 3. Consolidar linhas de dados
+          const rawSheetsData = [];
+          const itemsMap = new Map();
+          const locMap = new Map();
+          const natMap = new Map();
+          let totalBaseRows = 0;
+          let totalInventoryValue = 0;
+
+          wbRaw.SheetNames.forEach(sheetName => {
+            const cleanName = sheetMap[sheetName];
+            const ws = wbRaw.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+            if (rows.length < 2) return;
+
+            const headers = rows[0];
+            const dataRows = [];
+
+            for (let r = 1; r < rows.length; r++) {
+              const row = rows[r];
+              if (!row || row.length === 0) continue;
+              const codloc = row[0];
+              const nomeLoc = row[1];
+              const idprd = row[2];
+              const codigoprd = row[3];
+              const nomefantasia = row[4];
+              const saldoFisico = row[5];
+              const saldoFinanceiro = row[6];
+              const natureza = row[12];
+
+              // Pular totalizador do sistema
+              if (String(nomefantasia || '').toUpperCase() === 'TOTAL' || String(saldoFinanceiro || '').includes('SUM(') || String(codloc || '').toUpperCase() === 'TOTAL') {
+                continue;
+              }
+              if (idprd === null || idprd === undefined || idprd === '') {
+                continue;
+              }
+
+              const valNum = parseFloat(saldoFinanceiro) || 0;
+              const fisNum = parseFloat(saldoFisico) || 0;
+
+              if (nomeLoc && String(nomeLoc).includes(' - ') && projectName === "UFV NORONHA VERDE") {
+                projectName = String(nomeLoc).split(' - ')[0].trim();
+              }
+
+              dataRows.push({
+                codloc: String(codloc || ''),
+                nomeLoc: String(nomeLoc || ''),
+                idprd: idprd,
+                codigoprd: String(codigoprd || ''),
+                nomefantasia: String(nomefantasia || ''),
+                saldoFisico: fisNum,
+                saldoFinanceiro: valNum,
+                customedio: parseFloat(row[7]) || 0,
+                custounitario: parseFloat(row[8]) || 0,
+                codundcontrole: String(row[9] || ''),
+                fatorconversao: parseFloat(row[10]) || 1,
+                codundbase: String(row[11] || ''),
+                natureza: String(natureza || '')
+              });
+
+              totalBaseRows++;
+              totalInventoryValue += valNum;
+
+              // Itens consolidados
+              if (!itemsMap.has(idprd)) {
+                itemsMap.set(idprd, {
+                  idprd: idprd,
+                  codigoprd: String(codigoprd || ''),
+                  nome: String(nomefantasia || ''),
+                  natureza: String(natureza || ''),
+                  totalVal: 0,
+                  locations: new Set()
+                });
+              }
+              const itm = itemsMap.get(idprd);
+              itm.totalVal += valNum;
+              itm.locations.add(String(codloc || ''));
+
+              // Locais consolidados
+              const locKey = String(codloc || '');
+              if (!locMap.has(locKey)) {
+                let cleanLocName = String(nomeLoc || '');
+                if (cleanLocName.includes(' - ')) {
+                  cleanLocName = cleanLocName.split(' - ').slice(1).join(' - ').trim();
+                }
+                locMap.set(locKey, {
+                  codloc: locKey,
+                  nome: cleanLocName.toUpperCase() || locKey,
+                  totalVal: 0,
+                  count: 0
+                });
+              }
+              const loc = locMap.get(locKey);
+              loc.totalVal += valNum;
+              loc.count++;
+
+              // Naturezas consolidadas
+              const natKey = String(natureza || 'Outros').trim();
+              if (natKey) {
+                if (!natMap.has(natKey)) {
+                  natMap.set(natKey, { totalVal: 0, count: 0 });
+                }
+                const nat = natMap.get(natKey);
+                nat.totalVal += valNum;
+                nat.count++;
+              }
+            }
+
+            rawSheetsData.push({
+              origName: sheetName,
+              cleanName: cleanName,
+              headers: headers,
+              rows: dataRows
+            });
+          });
+
+          // 4. Ordenar itens e calcular Curva ABC
+          const sortedItems = Array.from(itemsMap.values()).sort((a, b) => b.totalVal - a.totalVal);
+          const numProducts = sortedItems.length;
+
+          let accumVal = 0;
+          let countA = 0, valA = 0;
+          let countB = 0, valB = 0;
+          let countC = 0, valC = 0;
+
+          sortedItems.forEach((itm, idx) => {
+            itm.rank = idx + 1;
+            accumVal += itm.totalVal;
+            itm.pctVal = totalInventoryValue > 0 ? (itm.totalVal / totalInventoryValue) : 0;
+            itm.pctAccum = totalInventoryValue > 0 ? (accumVal / totalInventoryValue) : 0;
+            itm.pctItems = (idx + 1) / numProducts;
+
+            if (itm.pctAccum <= 0.80) {
+              itm.classe = 'A';
+              countA++;
+              valA += itm.totalVal;
+            } else if (itm.pctAccum <= 0.95) {
+              itm.classe = 'B';
+              countB++;
+              valB += itm.totalVal;
+            } else {
+              itm.classe = 'C';
+              countC++;
+              valC += itm.totalVal;
+            }
+          });
+
+          const sortedLocations = Array.from(locMap.values()).sort((a, b) => b.totalVal - a.totalVal);
+          const sortedNaturezas = Array.from(natMap.entries()).sort((a, b) => b[1].totalVal - a[1].totalVal);
+
+          const topItemVal = sortedItems.length > 0 ? sortedItems[0].totalVal : 0;
+          const topItemPct = totalInventoryValue > 0 ? (topItemVal / totalInventoryValue * 100) : 0;
+
+          processedResult = {
+            projectName,
+            dateStr,
+            totalInventoryValue,
+            numProducts,
+            totalBaseRows,
+            sortedItems,
+            sortedLocations,
+            sortedNaturezas,
+            rawSheetsData,
+            countA, valA,
+            countB, valB,
+            countC, valC,
+            topItemPct: topItemPct.toFixed(1)
+          };
+
+          loadingBar.classList.add('hidden');
+          renderScreenResults(processedResult);
+
+        } catch (err) {
+          loadingBar.classList.add('hidden');
+          dropzone.classList.remove('hidden');
+          fileSelectedBar.classList.remove('hidden');
+          showError("Falha ao ler a planilha: " + err.message);
+        }
+      };
+
+      reader.readAsArrayBuffer(currentFile);
+    }
+
+    // Renderizar resultados visuais e gráficos Chart.js na tela
+    function renderScreenResults(res) {
+      document.getElementById('resProjectName').textContent = `Inventário – ${res.projectName}`;
+      document.getElementById('resSubDetails').textContent = `Posição de estoque em ${res.dateStr} • ${res.totalBaseRows.toLocaleString('pt-BR')} linhas consolidadas`;
+
+      // KPIs
+      document.getElementById('kpiTotalVal').textContent = formatBRL(res.totalInventoryValue);
+      document.getElementById('kpiProducts').textContent = res.numProducts.toLocaleString('pt-BR');
+      document.getElementById('kpiLocations').textContent = res.sortedLocations.length;
+      document.getElementById('kpiClassAItems').textContent = res.countA.toLocaleString('pt-BR');
+      document.getElementById('kpiClassAPctItems').textContent = `${((res.countA / res.numProducts) * 100).toFixed(1)}% dos produtos`;
+      document.getElementById('kpiClassAPctVal').textContent = `${((res.valA / res.totalInventoryValue) * 100).toFixed(1)}%`;
+      document.getElementById('kpiTopItemPct').textContent = `${res.topItemPct}%`;
+
+      // Tabela de Classes ABC
+      const tbodyClasses = document.getElementById('tblClassesBody');
+      tbodyClasses.innerHTML = '';
+      const classesData = [
+        { classe: 'A', itens: res.countA, val: res.valA, bg: 'bg-emerald-50 text-emerald-900' },
+        { classe: 'B', itens: res.countB, val: res.valB, bg: 'bg-amber-50 text-amber-900' },
+        { classe: 'C', itens: res.countC, val: res.valC, bg: 'bg-rose-50 text-rose-900' },
+        { classe: 'Total', itens: res.numProducts, val: res.totalInventoryValue, bg: 'bg-slate-100 font-bold' }
+      ];
+
+      classesData.forEach(cd => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition-colors";
+        const pctItens = ((cd.itens / res.numProducts) * 100).toFixed(1) + '%';
+        const pctValor = ((cd.val / res.totalInventoryValue) * 100).toFixed(1) + '%';
+        tr.innerHTML = `
+          <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-xs font-bold ${cd.bg}">Classe ${cd.classe}</span></td>
+          <td class="py-2.5 px-3 text-center font-medium">${cd.itens.toLocaleString('pt-BR')}</td>
+          <td class="py-2.5 px-3 text-center text-slate-500">${pctItens}</td>
+          <td class="py-2.5 px-3 text-right font-semibold text-slate-800">${formatBRL(cd.val)}</td>
+          <td class="py-2.5 px-3 text-center font-bold text-slate-700">${pctValor}</td>
+        `;
+        tbodyClasses.appendChild(tr);
+      });
+
+      // Tabela de Locais
+      const tbodyLocs = document.getElementById('tblLocationsBody');
+      tbodyLocs.innerHTML = '';
+      res.sortedLocations.forEach(loc => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition-colors";
+        const pct = ((loc.totalVal / res.totalInventoryValue) * 100).toFixed(1) + '%';
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-mono text-xs text-slate-500">${loc.codloc}</td>
+          <td class="py-2.5 px-3 font-medium text-slate-800">${loc.nome}</td>
+          <td class="py-2.5 px-3 text-center text-slate-600">${loc.count.toLocaleString('pt-BR')}</td>
+          <td class="py-2.5 px-3 text-right font-semibold text-slate-800">${formatBRL(loc.totalVal)}</td>
+          <td class="py-2.5 px-3 text-center text-slate-500 text-xs">${pct}</td>
+        `;
+        tbodyLocs.appendChild(tr);
+      });
+
+      // Renderizar Gráficos Chart.js
+      renderCharts(res);
+
+      document.getElementById('uploadSection').classList.add('hidden');
+      resultSection.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function renderCharts(res) {
+      // Destruir gráficos anteriores se existirem
+      Object.values(chartInstances).forEach(ch => ch.destroy());
+      chartInstances = {};
+
+      // 1. Curva ABC Linha (Amostra de 100 pontos para leveza)
+      const step = Math.max(1, Math.floor(res.sortedItems.length / 80));
+      const samplePoints = res.sortedItems.filter((_, i) => i % step === 0 || i === res.sortedItems.length - 1);
+
+      chartInstances.curvaAbc = new Chart(document.getElementById('chartCurvaAbc'), {
+        type: 'line',
+        data: {
+          labels: samplePoints.map(p => p.rank),
+          datasets: [{
+            label: '% Acumulado do Valor',
+            data: samplePoints.map(p => (p.pctAccum * 100).toFixed(1)),
+            borderColor: '#c00000',
+            backgroundColor: 'rgba(192, 0, 0, 0.05)',
+            fill: true,
+            tension: 0.2,
+            pointRadius: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx) => `${ctx.raw}% do valor acumulado` } }
+          },
+          scales: {
+            y: { min: 0, max: 100, ticks: { callback: v => v + '%' } },
+            x: { title: { display: true, text: 'Rank dos Produtos' } }
+          }
+        }
+      });
+
+      // 2. Pareto 20 maiores itens
+      const top20 = res.sortedItems.slice(0, 20);
+      chartInstances.pareto = new Chart(document.getElementById('chartPareto'), {
+        type: 'bar',
+        data: {
+          labels: top20.map(p => `#${p.rank}`),
+          datasets: [{
+            label: 'Valor em Estoque (R$)',
+            data: top20.map(p => p.totalVal),
+            backgroundColor: '#2f5597',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: (items) => {
+                  const itm = top20[items[0].dataIndex];
+                  return `${itm.codigoprd} - ${itm.nome.substring(0, 35)}...`;
+                },
+                label: (ctx) => formatBRL(ctx.raw)
+              }
+            }
+          },
+          scales: {
+            y: { ticks: { callback: v => 'R$ ' + (v/1000).toFixed(0) + 'k' } }
+          }
+        }
+      });
+
+      // 3. Rosca Classes ABC
+      chartInstances.rosca = new Chart(document.getElementById('chartRoscaAbc'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Classe A (80%)', 'Classe B (15%)', 'Classe C (5%)'],
+          datasets: [{
+            data: [res.valA, res.valB, res.valC],
+            backgroundColor: ['#10b981', '#f59e0b', '#f43f5e']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${formatBRL(ctx.raw)}` } }
+          }
+        }
+      });
+
+      // 4. Colunas Itens por Classe
+      chartInstances.itensClasse = new Chart(document.getElementById('chartItensClasse'), {
+        type: 'bar',
+        data: {
+          labels: ['Classe A', 'Classe B', 'Classe C'],
+          datasets: [{
+            label: 'Nº de Itens',
+            data: [res.countA, res.countB, res.countC],
+            backgroundColor: '#5b9bd5',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      // 5. Barras por Local
+      chartInstances.locais = new Chart(document.getElementById('chartLocais'), {
+        type: 'bar',
+        data: {
+          labels: res.sortedLocations.map(l => l.nome),
+          datasets: [{
+            label: 'Valor (R$)',
+            data: res.sortedLocations.map(l => l.totalVal),
+            backgroundColor: '#2f5597',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx) => formatBRL(ctx.raw) } }
+          },
+          scales: {
+            x: { ticks: { callback: v => 'R$ ' + (v/1000000).toFixed(1) + 'M' } }
+          }
+        }
+      });
+
+      // 6. Top 10 Naturezas
+      const top10Nat = res.sortedNaturezas.slice(0, 10);
+      chartInstances.naturezas = new Chart(document.getElementById('chartNaturezas'), {
+        type: 'bar',
+        data: {
+          labels: top10Nat.map(n => n[0].length > 30 ? n[0].substring(0, 30) + '...' : n[0]),
+          datasets: [{
+            label: 'Valor (R$)',
+            data: top10Nat.map(n => n[1].totalVal),
+            backgroundColor: '#2e75b6',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: items => top10Nat[items[0].dataIndex][0],
+                label: (ctx) => formatBRL(ctx.raw)
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { callback: v => 'R$ ' + (v/1000000).toFixed(1) + 'M' } }
+          }
+        }
+      });
+
+      // 7. Top 10 Itens
+      const top10 = res.sortedItems.slice(0, 10);
+      chartInstances.topItens = new Chart(document.getElementById('chartTopItens'), {
+        type: 'bar',
+        data: {
+          labels: top10.map(p => `${p.codigoprd} - ${p.nome.substring(0, 25)}...`),
+          datasets: [{
+            label: 'Valor (R$)',
+            data: top10.map(p => p.totalVal),
+            backgroundColor: '#c55a11',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: items => `${top10[items[0].dataIndex].codigoprd} - ${top10[items[0].dataIndex].nome}`,
+                label: (ctx) => formatBRL(ctx.raw)
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { callback: v => 'R$ ' + (v/1000).toFixed(0) + 'k' } }
+          }
+        }
+      });
+    }
+
+    // ==========================================================
+    // GERAÇÃO DO ARQUIVO EXCEL COMPLETO NO NAVEGADOR (.XLSX)
+    // ==========================================================
+    async function downloadGeneratedExcel() {
+      if (!processedResult) return;
+
+      const btn = document.getElementById('btnDownloadExcel');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Gerando Planilha Diego...`;
+      lucide.createIcons();
+
+      try {
+        const res = processedResult;
+        const wb = new ExcelJS.Workbook();
+        wb.creator = 'Planilha Diego';
+        wb.created = new Date();
+
+        const numProducts = res.numProducts;
+        const lastBaseRow = 1 + res.totalBaseRows;
+        const firstAbcRow = 8;
+        const lastAbcRow = firstAbcRow + numProducts - 1;
+        const totalAbcRow = lastAbcRow + 2;
+        const confAbcRow = lastAbcRow + 3;
+
+        const thinBorder = {
+          top: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+          left: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+          bottom: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+          right: { style: 'thin', color: { argb: 'FFD9D9D9' } }
+        };
+
+        // 1. ABA DASHBOARD
+        const wsDash = wb.addWorksheet('Dashboard', { properties: { tabColor: { argb: 'FF1F3864' } } });
+        wsDash.columns = Array.from({ length: 26 }, () => ({ width: 11 }));
+
+        wsDash.mergeCells('A1:Z2');
+        const cA1 = wsDash.getCell('A1');
+        cA1.value = `INVENTÁRIO – ${res.projectName}  |  DASHBOARD & CURVA ABC`;
+        cA1.font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+        cA1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F3864' } };
+        cA1.alignment = { horizontal: 'center', vertical: 'middle' };
+
+        wsDash.mergeCells('A3:Z3');
+        const cA3 = wsDash.getCell('A3');
+        cA3.value = `Posição de estoque em ${res.dateStr}  •  fonte: abas originais do inventário  •  valores em R$`;
+        cA3.font = { name: 'Arial', size: 9, color: { argb: 'FF595959' } };
+        cA3.alignment = { horizontal: 'center', vertical: 'middle' };
+
+        // 6 Cards de KPI
+        const kpiDefs = [
+          { tRange: 'A5:D5', vRange: 'A6:D7', title: 'VALOR TOTAL EM ESTOQUE', formula: `='Curva ABC'!G${totalAbcRow}`, fmt: '"R$ "#,##0.00' },
+          { tRange: 'E5:H5', vRange: 'E6:H7', title: 'PRODUTOS DISTINTOS', formula: `=COUNT('Curva ABC'!$B$${firstAbcRow}:$B$${lastAbcRow})`, fmt: '#,##0' },
+          { tRange: 'I5:L5', vRange: 'I6:L7', title: 'LOCAIS DE ESTOQUE', formula: `=COUNTA(Análises!A11:A${10 + res.sortedLocations.length})`, fmt: '0' },
+          { tRange: 'M5:P5', vRange: 'M6:P7', title: 'ITENS CLASSE A', formula: `=Análises!B4`, fmt: '#,##0' },
+          { tRange: 'Q5:T5', vRange: 'Q6:T7', title: '% DO VALOR EM CLASSE A', formula: `=Análises!E4`, fmt: '0.0%' },
+          { tRange: 'U5:Z5', vRange: 'U6:Z7', title: 'MAIOR ITEM (% DO TOTAL)', formula: `='Curva ABC'!H${firstAbcRow}`, fmt: '0.0%' }
+        ];
+
+        kpiDefs.forEach(k => {
+          wsDash.mergeCells(k.tRange);
+          const tCell = wsDash.getCell(k.tRange.split(':')[0]);
+          tCell.value = k.title;
+          tCell.font = { name: 'Arial', size: 9, bold: true, color: { argb: 'FFFFFFFF' } };
+          tCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2F5597' } };
+          tCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+          wsDash.mergeCells(k.vRange);
+          const vCell = wsDash.getCell(k.vRange.split(':')[0]);
+          vCell.value = { formula: k.formula.substring(1) };
+          vCell.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FF1F3864' } };
+          vCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDDEBF7' } };
+          vCell.alignment = { horizontal: 'center', vertical: 'middle' };
+          vCell.numFmt = k.fmt;
+        });
+
+        wsDash.mergeCells('A9:Z9');
+        const cA9 = wsDash.getCell('A9');
+        cA9.value = 'Resumo por classe ABC';
+        cA9.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF1F3864' } };
+
+        const resumoHeaders = [
+          { range: 'A10:B10', text: 'Classe' },
+          { range: 'C10:D10', text: 'Nº itens' },
+          { range: 'E10:F10', text: '% itens' },
+          { range: 'G10:I10', text: 'Valor (R$)' },
+          { range: 'J10:K10', text: '% valor' }
+        ];
+        resumoHeaders.forEach(rh => {
+          wsDash.mergeCells(rh.range);
+          const cell = wsDash.getCell(rh.range.split(':')[0]);
+          cell.value = rh.text;
+          cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F3864' } };
+          cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        });
+
+        wsDash.mergeCells('M10:Z14');
+        const cM10 = wsDash.getCell('M10');
+        cM10.value = 'Como ler: poucos itens (A) concentram a maior parte do valor; priorize contagem, segurança e reposição neles.';
+        cM10.font = { name: 'Arial', size: 9, color: { argb: 'FF595959' } };
+        cM10.alignment = { horizontal: 'left', vertical: 'top', wrapText: true };
+
+        const resumoRows = [
+          { r: 11, anR: 4, bg: 'FFC6EFCE', bold: false },
+          { r: 12, anR: 5, bg: 'FFFFEB9C', bold: false },
+          { r: 13, anR: 6, bg: 'FFF8CBAD', bold: false },
+          { r: 14, anR: 7, bg: 'FFDDEBF7', bold: true }
+        ];
+        resumoRows.forEach(rowInfo => {
+          const r = rowInfo.r;
+          const anR = rowInfo.anR;
+          const cells = [
+            { range: `A${r}:B${r}`, f: `Análises!A${anR}`, fmt: null, align: 'center' },
+            { range: `C${r}:D${r}`, f: `Análises!B${anR}`, fmt: '#,##0', align: 'center' },
+            { range: `E${r}:F${r}`, f: `Análises!C${anR}`, fmt: '0.0%', align: 'center' },
+            { range: `G${r}:I${r}`, f: `Análises!D${anR}`, fmt: '"R$ "#,##0.00', align: 'right' },
+            { range: `J${r}:K${r}`, f: `Análises!E${anR}`, fmt: '0.0%', align: 'center' }
+          ];
+          cells.forEach(cDef => {
+            wsDash.mergeCells(cDef.range);
+            const cell = wsDash.getCell(cDef.range.split(':')[0]);
+            cell.value = { formula: cDef.f };
+            cell.font = { name: 'Arial', size: 10, bold: rowInfo.bold };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowInfo.bg } };
+            cell.alignment = { horizontal: cDef.align, vertical: 'middle' };
+            if (cDef.fmt) cell.numFmt = cDef.fmt;
+            cell.border = thinBorder;
+          });
+        });
+
+        // 2. ABA CURVA ABC
+        const wsAbc = wb.addWorksheet('Curva ABC', { properties: { tabColor: { argb: 'FFC00000' } } });
+        wsAbc.columns = [
+          { width: 7 }, { width: 11 }, { width: 13 }, { width: 68 },
+          { width: 44 }, { width: 9 }, { width: 20 }, { width: 10 },
+          { width: 12 }, { width: 12 }, { width: 8 }
+        ];
+
+        wsAbc.getCell('A1').value = 'CURVA ABC DE ESTOQUE – CONSOLIDADA POR PRODUTO';
+        wsAbc.getCell('A1').font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FF1F3864' } };
+
+        wsAbc.getCell('A2').value = `Valor = soma do saldo financeiro do produto em todos os locais (aba Base). Ordem por valor decrescente (ordenada em ${res.dateStr}).`;
+        wsAbc.getCell('A2').font = { name: 'Arial', size: 9, color: { argb: 'FF595959' } };
+
+        wsAbc.getCell('A4').value = 'Limite classe A (% acumulado do valor)';
+        wsAbc.getCell('A4').font = { name: 'Arial', size: 10, bold: true };
+        const cE4 = wsAbc.getCell('E4');
+        cE4.value = 0.8;
+        cE4.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF0000FF' } };
+        cE4.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
+        cE4.alignment = { horizontal: 'center' };
+        cE4.numFmt = '0%';
+
+        wsAbc.getCell('G4').value = '← células amarelas: edite para mudar o corte (A: acumulado ≤ limite A; B: ≤ limite B; C: restante)';
+        wsAbc.getCell('G4').font = { name: 'Arial', size: 9, color: { argb: 'FF595959' } };
+
+        wsAbc.getCell('A5').value = 'Limite classe B (% acumulado do valor)';
+        wsAbc.getCell('A5').font = { name: 'Arial', size: 10, bold: true };
+        const cE5 = wsAbc.getCell('E5');
+        cE5.value = 0.95;
+        cE5.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF0000FF' } };
+        cE5.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
+        cE5.alignment = { horizontal: 'center' };
+        cE5.numFmt = '0%';
+
+        const abcHeaders = ['Rank', 'IDPRD', 'Código', 'Descrição', 'Natureza', 'Nº locais', 'Valor em estoque (R$)', '% do valor', '% acumulado', '% acum. itens', 'Classe'];
+        const hRow = wsAbc.getRow(7);
+        abcHeaders.forEach((h, idx) => {
+          const c = hRow.getCell(idx + 1);
+          c.value = h;
+          c.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+          c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F3864' } };
+          c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+          c.border = thinBorder;
+        });
+
+        res.sortedItems.forEach((itm, idx) => {
+          const r = firstAbcRow + idx;
+          const row = wsAbc.getRow(r);
+          row.getCell(1).value = itm.rank;
+          row.getCell(1).alignment = { horizontal: 'center' };
+
+          row.getCell(2).value = itm.idprd;
+          row.getCell(2).numFmt = '0';
+
+          row.getCell(3).value = itm.codigoprd;
+          row.getCell(4).value = itm.nome;
+          row.getCell(5).value = itm.natureza;
+
+          row.getCell(6).value = { formula: `COUNTIF(Base!$D$2:$D$${lastBaseRow},B${r})` };
+          row.getCell(6).alignment = { horizontal: 'center' };
+
+          row.getCell(7).value = { formula: `SUMIF(Base!$D$2:$D$${lastBaseRow},B${r},Base!$I$2:$I$${lastBaseRow})` };
+          row.getCell(7).numFmt = '"R$ "#,##0.00';
+
+          row.getCell(8).value = { formula: `IF($G$${totalAbcRow}=0,0,G${r}/$G$${totalAbcRow})` };
+          row.getCell(8).numFmt = '0.00%';
+
+          if (idx === 0) {
+            row.getCell(9).value = { formula: `H${r}` };
+          } else {
+            row.getCell(9).value = { formula: `I${r - 1}+H${r}` };
+          }
+          row.getCell(9).numFmt = '0.0%';
+
+          row.getCell(10).value = { formula: `A${r}/${numProducts}` };
+          row.getCell(10).numFmt = '0.0%';
+
+          const cK = row.getCell(11);
+          cK.value = { formula: `IF(I${r}<=$E$4,"A",IF(I${r}<=$E$5,"B","C"))` };
+          cK.alignment = { horizontal: 'center' };
+
+          if (itm.classe === 'A') {
+            cK.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC6EFCE' } };
+            cK.font = { name: 'Arial', size: 9, bold: true, color: { argb: 'FF006100' } };
+          } else if (itm.classe === 'B') {
+            cK.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFEB9C' } };
+            cK.font = { name: 'Arial', size: 9, bold: true, color: { argb: 'FF9C6500' } };
+          } else {
+            cK.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8CBAD' } };
+            cK.font = { name: 'Arial', size: 9, bold: true, color: { argb: 'FF9C0006' } };
+          }
+
+          for (let col = 1; col <= 10; col++) {
+            row.getCell(col).font = { name: 'Arial', size: 9 };
+          }
+        });
+
+        // Totais Curva ABC
+        const rTot = wsAbc.getRow(totalAbcRow);
+        rTot.getCell(6).value = 'TOTAL';
+        rTot.getCell(6).font = { name: 'Arial', size: 10, bold: true };
+        rTot.getCell(6).alignment = { horizontal: 'right' };
+        rTot.getCell(7).value = { formula: `SUM(G${firstAbcRow}:G${lastAbcRow})` };
+        rTot.getCell(7).font = { name: 'Arial', size: 10, bold: true };
+        rTot.getCell(7).numFmt = '"R$ "#,##0.00';
+
+        const rConf = wsAbc.getRow(confAbcRow);
+        rConf.getCell(6).value = 'Conferência vs Base';
+        rConf.getCell(6).font = { name: 'Arial', size: 9, color: { argb: 'FF595959' } };
+        rConf.getCell(6).alignment = { horizontal: 'right' };
+        rConf.getCell(7).value = { formula: `G${totalAbcRow}-SUM(Base!$I$2:$I$${lastBaseRow})` };
+        rConf.getCell(7).font = { name: 'Arial', size: 9, color: { argb: 'FF595959' } };
+        rConf.getCell(7).numFmt = '"R$ "#,##0.00';
+
+        // 3. ABA ANÁLISES
+        const wsAn = wb.addWorksheet('Análises', { properties: { tabColor: { argb: 'FF808080' } } });
+        wsAn.columns = [{ width: 58 }, { width: 40 }, { width: 17 }, { width: 17 }, { width: 14 }, { width: 18 }];
+
+        wsAn.getCell('A1').value = 'TABELAS DE APOIO DO DASHBOARD (fórmulas – não editar)';
+        wsAn.getCell('A1').font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF1F3864' } };
+
+        const t1Headers = ['Classe', 'Nº itens', '% itens', 'Valor (R$)', '% valor'];
+        t1Headers.forEach((h, idx) => {
+          const c = wsAn.getRow(3).getCell(idx + 1);
+          c.value = h;
+          c.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+          c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F3864' } };
+          c.alignment = { horizontal: 'center' };
+          c.border = thinBorder;
+        });
+
+        ['A', 'B', 'C'].forEach((cl, idx) => {
+          const r = 4 + idx;
+          const row = wsAn.getRow(r);
+          row.getCell(1).value = cl;
+          row.getCell(1).alignment = { horizontal: 'center' };
+          row.getCell(2).value = { formula: `COUNTIF('Curva ABC'!$K$${firstAbcRow}:$K$${lastAbcRow},A${r})` };
+          row.getCell(2).numFmt = '#,##0';
+          row.getCell(3).value = { formula: `B${r}/$B$7` };
+          row.getCell(3).numFmt = '0.0%';
+          row.getCell(4).value = { formula: `SUMIF('Curva ABC'!$K$${firstAbcRow}:$K$${lastAbcRow},A${r},'Curva ABC'!$G$${firstAbcRow}:$G$${lastAbcRow})` };
+          row.getCell(4).numFmt = '"R$ "#,##0.00';
+          row.getCell(5).value = { formula: `D${r}/$D$7` };
+          row.getCell(5).numFmt = '0.0%';
+        });
+
+        const r7 = wsAn.getRow(7);
+        r7.getCell(1).value = 'Total';
+        r7.getCell(1).font = { name: 'Arial', size: 10, bold: true };
+        r7.getCell(2).value = { formula: 'SUM(B4:B6)' };
+        r7.getCell(2).numFmt = '#,##0';
+        r7.getCell(2).font = { name: 'Arial', size: 10, bold: true };
+        r7.getCell(3).value = { formula: 'SUM(C4:C6)' };
+        r7.getCell(3).numFmt = '0.0%';
+        r7.getCell(3).font = { name: 'Arial', size: 10, bold: true };
+        r7.getCell(4).value = { formula: 'SUM(D4:D6)' };
+        r7.getCell(4).numFmt = '"R$ "#,##0.00';
+        r7.getCell(4).font = { name: 'Arial', size: 10, bold: true };
+        r7.getCell(5).value = { formula: 'SUM(E4:E6)' };
+        r7.getCell(5).numFmt = '0.0%';
+        r7.getCell(5).font = { name: 'Arial', size: 10, bold: true };
+
+        // Tabela 2: Locais
+        const t2Headers = ['CODLOC', 'Local', 'Nº linhas', 'Valor (R$)', '% valor'];
+        t2Headers.forEach((h, idx) => {
+          const c = wsAn.getRow(10).getCell(idx + 1);
+          c.value = h;
+          c.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+          c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F3864' } };
+          c.alignment = { horizontal: 'center' };
+          c.border = thinBorder;
+        });
+
+        const firstLocR = 11;
+        const lastLocR = firstLocR + res.sortedLocations.length - 1;
+        const totLocR = lastLocR + 1;
+
+        res.sortedLocations.forEach((loc, idx) => {
+          const r = firstLocR + idx;
+          const row = wsAn.getRow(r);
+          row.getCell(1).value = loc.codloc;
+          row.getCell(1).alignment = { horizontal: 'center' };
+          row.getCell(2).value = loc.nome;
+          row.getCell(3).value = { formula: `COUNTIF(Base!$B$2:$B$${lastBaseRow},A${r})` };
+          row.getCell(3).numFmt = '#,##0';
+          row.getCell(4).value = { formula: `SUMIF(Base!$B$2:$B$${lastBaseRow},A${r},Base!$I$2:$I$${lastBaseRow})` };
+          row.getCell(4).numFmt = '"R$ "#,##0.00';
+          row.getCell(5).value = { formula: `D${r}/$D$${totLocR}` };
+          row.getCell(5).numFmt = '0.0%';
+        });
+
+        const rTotLoc = wsAn.getRow(totLocR);
+        rTotLoc.getCell(1).value = 'Total';
+        rTotLoc.getCell(1).font = { name: 'Arial', size: 10, bold: true };
+        rTotLoc.getCell(3).value = { formula: `SUM(C${firstLocR}:C${lastLocR})` };
+        rTotLoc.getCell(3).numFmt = '#,##0';
+        rTotLoc.getCell(3).font = { name: 'Arial', size: 10, bold: true };
+        rTotLoc.getCell(4).value = { formula: `SUM(D${firstLocR}:D${lastLocR})` };
+        rTotLoc.getCell(4).numFmt = '"R$ "#,##0.00';
+        rTotLoc.getCell(4).font = { name: 'Arial', size: 10, bold: true };
+        rTotLoc.getCell(5).value = { formula: `SUM(E${firstLocR}:E${lastLocR})` };
+        rTotLoc.getCell(5).numFmt = '0.0%';
+        rTotLoc.getCell(5).font = { name: 'Arial', size: 10, bold: true };
+
+        // Tabela 3: Matriz Local x Classe
+        const matStartR = totLocR + 3;
+        const t3Headers = ['CODLOC', 'Local', 'Classe A (R$)', 'Classe B (R$)', 'Classe C (R$)', 'Total (R$)'];
+        t3Headers.forEach((h, idx) => {
+          const c = wsAn.getRow(matStartR).getCell(idx + 1);
+          c.value = h;
+          c.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+          c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F3864' } };
+          c.alignment = { horizontal: 'center' };
+          c.border = thinBorder;
+        });
+
+        res.sortedLocations.forEach((loc, idx) => {
+          const r = matStartR + 1 + idx;
+          const locRefR = firstLocR + idx;
+          const row = wsAn.getRow(r);
+          row.getCell(1).value = loc.codloc;
+          row.getCell(1).alignment = { horizontal: 'center' };
+          row.getCell(2).value = { formula: `B${locRefR}` };
+          row.getCell(3).value = { formula: `SUMIFS(Base!$I$2:$I$${lastBaseRow},Base!$B$2:$B$${lastBaseRow},$A${r},Base!$K$2:$K$${lastBaseRow},"A")` };
+          row.getCell(3).numFmt = '"R$ "#,##0.00';
+          row.getCell(4).value = { formula: `SUMIFS(Base!$I$2:$I$${lastBaseRow},Base!$B$2:$B$${lastBaseRow},$A${r},Base!$K$2:$K$${lastBaseRow},"B")` };
+          row.getCell(4).numFmt = '"R$ "#,##0.00';
+          row.getCell(5).value = { formula: `SUMIFS(Base!$I$2:$I$${lastBaseRow},Base!$B$2:$B$${lastBaseRow},$A${r},Base!$K$2:$K$${lastBaseRow},"C")` };
+          row.getCell(5).numFmt = '"R$ "#,##0.00';
+          row.getCell(6).value = { formula: `SUM(C${r}:E${r})` };
+          row.getCell(6).numFmt = '"R$ "#,##0.00';
+        });
+
+        // Tabela 4: Top 10 Naturezas
+        const natStartR = 28;
+        const t4Headers = ['Natureza (top 10)', 'Nº itens', 'Valor (R$)', '% valor'];
+        t4Headers.forEach((h, idx) => {
+          const c = wsAn.getRow(natStartR).getCell(idx + 1);
+          c.value = h;
+          c.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+          c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F3864' } };
+          c.alignment = { horizontal: 'center' };
+          c.border = thinBorder;
+        });
+
+        const top10Nat = res.sortedNaturezas.slice(0, 10);
+        top10Nat.forEach((item, idx) => {
+          const r = natStartR + 1 + idx;
+          const row = wsAn.getRow(r);
+          row.getCell(1).value = item[0];
+          row.getCell(2).value = { formula: `COUNTIF('Curva ABC'!$E$${firstAbcRow}:$E$${lastAbcRow},A${r})` };
+          row.getCell(2).numFmt = '#,##0';
+          row.getCell(3).value = { formula: `SUMIF('Curva ABC'!$E$${firstAbcRow}:$E$${lastAbcRow},A${r},'Curva ABC'!$G$${firstAbcRow}:$G$${lastAbcRow})` };
+          row.getCell(3).numFmt = '"R$ "#,##0.00';
+          row.getCell(4).value = { formula: `C${r}/'Curva ABC'!$G$${totalAbcRow}` };
+          row.getCell(4).numFmt = '0.0%';
+        });
+
+        const demaisNatR = natStartR + 1 + top10Nat.length;
+        const rDemais = wsAn.getRow(demaisNatR);
+        rDemais.getCell(1).value = 'Demais naturezas';
+        rDemais.getCell(1).font = { name: 'Arial', size: 10, italic: true };
+        rDemais.getCell(3).value = { formula: `'Curva ABC'!$G$${totalAbcRow}-SUM(C29:C${demaisNatR - 1})` };
+        rDemais.getCell(3).numFmt = '"R$ "#,##0.00';
+        rDemais.getCell(4).value = { formula: `C${demaisNatR}/'Curva ABC'!$G$${totalAbcRow}` };
+        rDemais.getCell(4).numFmt = '0.0%';
+
+        // Tabela 5: Top 10 Itens
+        const t5StartR = 43;
+        const t5Headers = ['Top 10 itens', 'Valor (R$)', '% valor'];
+        t5Headers.forEach((h, idx) => {
+          const c = wsAn.getRow(t5StartR).getCell(idx + 1);
+          c.value = h;
+          c.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+          c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F3864' } };
+          c.alignment = { horizontal: 'center' };
+          c.border = thinBorder;
+        });
+
+        for (let idx = 0; idx < Math.min(10, numProducts); idx++) {
+          const r = t5StartR + 1 + idx;
+          const abcR = firstAbcRow + idx;
+          const row = wsAn.getRow(r);
+          row.getCell(1).value = { formula: `'Curva ABC'!C${abcR}&" - "&LEFT('Curva ABC'!D${abcR},38)` };
+          row.getCell(2).value = { formula: `'Curva ABC'!G${abcR}` };
+          row.getCell(2).numFmt = '"R$ "#,##0.00';
+          row.getCell(3).value = { formula: `'Curva ABC'!H${abcR}` };
+          row.getCell(3).numFmt = '0.00%';
+        }
+
+        // Tabela 6: Top 20 Itens
+        const t6StartR = 57;
+        const t6Headers = ['Rank', 'Valor (R$)', '% acumulado'];
+        t6Headers.forEach((h, idx) => {
+          const c = wsAn.getRow(t6StartR).getCell(idx + 1);
+          c.value = h;
+          c.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+          c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F3864' } };
+          c.alignment = { horizontal: 'center' };
+          c.border = thinBorder;
+        });
+
+        for (let idx = 0; idx < Math.min(20, numProducts); idx++) {
+          const r = t6StartR + 1 + idx;
+          const abcR = firstAbcRow + idx;
+          const row = wsAn.getRow(r);
+          row.getCell(1).value = { formula: `'Curva ABC'!A${abcR}` };
+          row.getCell(1).alignment = { horizontal: 'center' };
+          row.getCell(2).value = { formula: `'Curva ABC'!G${abcR}` };
+          row.getCell(2).numFmt = '"R$ "#,##0.00';
+          row.getCell(3).value = { formula: `'Curva ABC'!I${abcR}` };
+          row.getCell(3).numFmt = '0.0%';
+        }
+
+        // 4. ABA BASE
+        const wsBase = wb.addWorksheet('Base', { properties: { tabColor: { argb: 'FF808080' } } });
+        wsBase.columns = [
+          { width: 18 }, { width: 9 }, { width: 40 }, { width: 11 }, { width: 13 },
+          { width: 70 }, { width: 8 }, { width: 13 }, { width: 19 }, { width: 46 }, { width: 11 }
+        ];
+
+        const baseHeaders = ['Aba origem', 'CODLOC', 'Local', 'IDPRD', 'Código', 'Descrição', 'Unid.', 'Saldo físico', 'Saldo financeiro (R$)', 'Natureza', 'Classe ABC'];
+        baseHeaders.forEach((h, idx) => {
+          const c = wsBase.getRow(1).getCell(idx + 1);
+          c.value = h;
+          c.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+          c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F3864' } };
+          c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+        });
+
+        let currBaseR = 2;
+        res.rawSheetsData.forEach(sInfo => {
+          const cleanName = sInfo.cleanName;
+          sInfo.rows.forEach((rowObj, rIdx) => {
+            const rSrc = 2 + rIdx;
+            const r = currBaseR++;
+            const row = wsBase.getRow(r);
+            row.getCell(1).value = cleanName;
+            row.getCell(2).value = { formula: `'${cleanName}'!A${rSrc}` };
+            row.getCell(3).value = { formula: `'${cleanName}'!B${rSrc}` };
+            row.getCell(4).value = { formula: `'${cleanName}'!C${rSrc}` };
+            row.getCell(5).value = { formula: `'${cleanName}'!D${rSrc}` };
+            row.getCell(6).value = { formula: `'${cleanName}'!E${rSrc}` };
+            row.getCell(7).value = { formula: `'${cleanName}'!J${rSrc}` };
+
+            row.getCell(8).value = { formula: `'${cleanName}'!F${rSrc}` };
+            row.getCell(8).numFmt = '#,##0.00';
+
+            row.getCell(9).value = { formula: `'${cleanName}'!G${rSrc}` };
+            row.getCell(9).numFmt = '"R$ "#,##0.00';
+
+            row.getCell(10).value = { formula: `'${cleanName}'!M${rSrc}` };
+
+            const cK = row.getCell(11);
+            cK.value = { formula: `INDEX('Curva ABC'!$K$${firstAbcRow}:$K$${lastAbcRow},MATCH(D${r},'Curva ABC'!$B$${firstAbcRow}:$B$${lastAbcRow},0))` };
+            cK.alignment = { horizontal: 'center' };
+
+            for (let c = 1; c <= 11; c++) {
+              row.getCell(c).font = { name: 'Arial', size: 9 };
+            }
+          });
+        });
+
+        // 5..N. ABAS DE DADOS ORIGINAIS
+        res.rawSheetsData.forEach(sInfo => {
+          const wsOrig = wb.addWorksheet(sInfo.cleanName);
+          wsOrig.columns = Array.from({ length: 13 }, () => ({ width: 14 }));
+          
+          sInfo.headers.forEach((h, idx) => {
+            wsOrig.getRow(1).getCell(idx + 1).value = h;
+            wsOrig.getRow(1).getCell(idx + 1).font = { name: 'Arial', size: 10, bold: true };
+          });
+
+          sInfo.rows.forEach((rObj, idx) => {
+            const r = 2 + idx;
+            const row = wsOrig.getRow(r);
+            row.getCell(1).value = rObj.codloc;
+            row.getCell(2).value = rObj.nomeLoc;
+            row.getCell(3).value = rObj.idprd;
+            row.getCell(4).value = rObj.codigoprd;
+            row.getCell(5).value = rObj.nomefantasia;
+            row.getCell(6).value = rObj.saldoFisico;
+            row.getCell(7).value = rObj.saldoFinanceiro;
+            row.getCell(7).numFmt = '"R$ "#,##0.00';
+            row.getCell(8).value = rObj.customedio;
+            row.getCell(9).value = rObj.custounitario;
+            row.getCell(10).value = rObj.codundcontrole;
+            row.getCell(11).value = rObj.fatorconversao;
+            row.getCell(12).value = rObj.codundbase;
+            row.getCell(13).value = rObj.natureza;
+          });
+
+          const totR = 2 + sInfo.rows.length;
+          const rTot = wsOrig.getRow(totR);
+          rTot.getCell(6).value = 'TOTAL';
+          rTot.getCell(6).font = { name: 'Arial', size: 10, bold: true };
+          rTot.getCell(7).value = { formula: `SUM(G2:G${totR - 1})` };
+          rTot.getCell(7).font = { name: 'Arial', size: 10, bold: true };
+          rTot.getCell(7).numFmt = '"R$ "#,##0.00';
+        });
+
+        // Gerar Buffer e Baixar
+        const buffer = await wb.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const downloadName = currentFile.name.replace(/\.(xlsx|xls)$/i, '') + '_ABC_DASHBOARD.xlsx';
+        saveAs(blob, downloadName);
+
+      } catch (err) {
+        alert("Erro ao gerar o arquivo Excel: " + err.message);
+      } finally {
+        btn.innerHTML = originalText;
+        lucide.createIcons();
+      }
+    }
+
+    function resetApp() {
+      currentFile = null;
+      processedResult = null;
+      fileInput.value = '';
+      hideError();
+      document.getElementById('uploadSection').classList.remove('hidden');
+      dropzone.classList.remove('hidden');
+      fileSelectedBar.classList.add('hidden');
+      loadingBar.classList.add('hidden');
+      resultSection.classList.add('hidden');
+      lucide.createIcons();
+    }
+
+    function showError(msg) {
+      errorMessage.textContent = msg;
+      errorAlert.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function hideError() {
+      errorAlert.classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
