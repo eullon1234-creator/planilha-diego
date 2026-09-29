@@ -1309,6 +1309,21 @@ Por favor, elabore um parecer executivo contendo:
           right: { style: 'thin', color: { argb: 'FFD9D9D9' } }
         };
 
+        // ── Captura dos gráficos do Chart.js como imagens PNG ──────────────
+        const captureChart = (id) => {
+          const canvas = document.getElementById(id);
+          if (!canvas) return null;
+          try { return canvas.toDataURL('image/png'); } catch (e) { return null; }
+        };
+        // Aguarda micro-task para garantir que os charts foram renderizados
+        await new Promise(r => setTimeout(r, 150));
+        const imgCurvaAbc    = captureChart('chartCurvaAbc');
+        const imgPareto      = captureChart('chartPareto');
+        const imgRosca       = captureChart('chartRoscaAbc');
+        const imgItensClasse = captureChart('chartItensClasse');
+        const imgLocais      = captureChart('chartLocais');
+
+        // ── Workbook ─────────────────────────────────────────────────────────
         // 1. ABA DASHBOARD
         const wsDash = wb.addWorksheet('Dashboard', { 
           properties: { tabColor: { argb: 'FF1F3864' } },
@@ -1410,6 +1425,43 @@ Por favor, elabore um parecer executivo contendo:
             cell.border = thinBorder;
           });
         });
+
+        // ── Seção de Gráficos no Dashboard ────────────────────────────────
+        wsDash.mergeCells('A16:Z16');
+        const cSec = wsDash.getCell('A16');
+        cSec.value = 'GRÁFICOS DO DASHBOARD';
+        cSec.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF1F3864' } };
+        cSec.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDDEBF7' } };
+        cSec.alignment = { horizontal: 'center', vertical: 'middle' };
+
+        // Helper: converte data-URL para base64 puro
+        const dataUrlToBase64 = (dataUrl) => dataUrl ? dataUrl.split(',')[1] : null;
+
+        const chartDefs = [
+          { img: imgCurvaAbc,    label: 'Curva ABC – % acumulado do valor',  col: 1,  row: 18, colSpan: 12, rowSpan: 20 },
+          { img: imgPareto,      label: 'Pareto – 20 maiores itens por valor', col: 14, row: 18, colSpan: 13, rowSpan: 20 },
+          { img: imgRosca,       label: 'Valor por Classe ABC (R$)',           col: 1,  row: 40, colSpan: 8,  rowSpan: 18 },
+          { img: imgItensClasse, label: 'Nº de itens por classe',              col: 10, row: 40, colSpan: 8,  rowSpan: 18 },
+          { img: imgLocais,      label: 'Valor por local de estoque',          col: 19, row: 40, colSpan: 8,  rowSpan: 18 },
+        ];
+
+        for (const cd of chartDefs) {
+          const b64 = dataUrlToBase64(cd.img);
+          if (!b64) continue;
+
+          // Linha de label acima da imagem
+          const lblRow = cd.row - 1;
+          const lblCell = wsDash.getCell(lblRow, cd.col);
+          lblCell.value = cd.label;
+          lblCell.font = { name: 'Arial', size: 9, bold: true, color: { argb: 'FF2F5597' } };
+
+          const imgId = wb.addImage({ base64: b64, extension: 'png' });
+          wsDash.addImage(imgId, {
+            tl: { col: cd.col - 1, row: cd.row - 1 },
+            br: { col: cd.col - 1 + cd.colSpan, row: cd.row - 1 + cd.rowSpan },
+            editAs: 'oneCell'
+          });
+        }
 
         // 2. ABA CURVA ABC COM FREEZE PANES E AUTOFILTER
         const wsAbc = wb.addWorksheet('Curva ABC', { 
@@ -1538,7 +1590,7 @@ Por favor, elabore um parecer executivo contendo:
 
         // 3. ABA ANÁLISES
         const wsAn = wb.addWorksheet('Análises', { 
-          properties: { tabColor: { argb: 'FF808080' } },
+          properties: { tabColor: { argb: 'FF375623' } },
           views: [{ showGridLines: true }]
         });
         wsAn.columns = [{ width: 58 }, { width: 40 }, { width: 17 }, { width: 17 }, { width: 14 }, { width: 18 }];
@@ -1752,7 +1804,7 @@ Por favor, elabore um parecer executivo contendo:
 
         // 4. ABA BASE COM FREEZE PANES E AUTOFILTER
         const wsBase = wb.addWorksheet('Base', { 
-          properties: { tabColor: { argb: 'FF808080' } },
+          properties: { tabColor: { argb: 'FF7030A0' } },
           views: [{ state: 'frozen', xSplit: 0, ySplit: 1, showGridLines: true }]
         });
         wsBase.columns = [
@@ -1810,6 +1862,7 @@ Por favor, elabore um parecer executivo contendo:
         // 5..N. ABAS DE DADOS ORIGINAIS RENOMEADAS
         res.rawSheetsData.forEach(sInfo => {
           const wsOrig = wb.addWorksheet(sInfo.cleanName, {
+            properties: { tabColor: { argb: 'FF833C00' } },
             views: [{ state: 'frozen', xSplit: 0, ySplit: 1, showGridLines: true }]
           });
           wsOrig.columns = Array.from({ length: 13 }, () => ({ width: 14 }));
